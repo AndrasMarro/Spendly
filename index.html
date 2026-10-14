@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spendly</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
+<script src="https://accounts.google.com/gsi/client"></script>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mut:#667085; --line:#e4e7ec; --acc:#4f46e5; --acc2:#eef2ff; --bad:#dc2626; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1115; --card:#181b22; --fg:#e6e8ec; --mut:#98a2b3; --line:#2a2f3a; --acc:#818cf8; --acc2:#1e2140; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--fg); }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:18px; margin:0 12px 0 0; }
+  nav { display:flex; gap:4px; flex:1; }
+  nav button { background:none; border:0; padding:8px 12px; border-radius:8px; color:var(--mut); font-weight:600; }
+  nav button.on { background:var(--acc2); color:var(--acc); }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi small { color:var(--mut); display:block; } .kpi b { font-size:24px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:760px){ .grid2 { grid-template-columns:1fr; } }
+  h2 { font-size:16px; margin:0 0 12px; }
+  .bar { display:grid; grid-template-columns:minmax(0,180px) 1fr auto; gap:8px; align-items:center; margin:6px 0; font-size:14px; }
+  .bar span:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar i { display:block; height:10px; border-radius:5px; background:var(--acc); }
+  table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th { color:var(--mut); font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  .r { text-align:right; white-space:nowrap; } .mut { color:var(--mut); } .off { opacity:.45; }
+  .scroll { overflow-x:auto; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; } .tools input[type=search] { flex:1; min-width:180px; }
+  input, select, textarea, button { font:inherit; color:inherit; }
+  input, select, textarea { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%; }
+  .tools select, .tools input, header select { width:auto; }
+  button { cursor:pointer; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:8px 12px; }
+  button.pri { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+  button.ico { padding:4px 8px; border:0; background:none; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+  dialog { border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--fg); width:min(520px,calc(100vw - 32px)); padding:20px; }
+  dialog::backdrop { background:#0007; }
+  dialog form { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; } dialog label { display:grid; gap:4px; font-size:13px; color:var(--mut); }
+  dialog .full { grid-column:1/-1; } dialog .acts { grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+  .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:99px; background:var(--acc2); color:var(--acc); white-space:nowrap; }
+  #login { max-width:420px; margin:12vh auto; text-align:center; }
+  #user { display:flex; align-items:center; gap:8px; font-size:13px; } #user img { width:28px; height:28px; border-radius:50%; }
+  #toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:14px; display:none; z-index:20; }
+  .empty { color:var(--mut); text-align:center; padding:24px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header id="top" hidden>
+  <h1>💸 Spendly</h1>
+  <nav>
+    <button data-tab="dash" class="on">Übersicht</button>
+    <button data-tab="subs">Abos</button>
+    <button data-tab="inv">Rechnungen</button>
+  </nav>
+  <select id="base" title="Basiswährung" aria-label="Basiswährung"></select>
+  <div id="user"></div>
+</header>
+
+<section id="login" class="card">
+  <h1>💸 Spendly</h1>
+  <p class="mut">Abos, Kosten und Rechnungen an einem Ort.<br>Deine Daten liegen in <b>deinem eigenen Google Drive</b>.</p>
+  <button class="pri" id="loginBtn">Mit Google anmelden</button>
+  <p id="setup" class="mut" hidden>⚠️ <code>CLIENT_ID</code> in <code>index.html</code> fehlt – siehe README.</p>
+</section>
+
+<main id="app" hidden>
+  <section data-view="dash">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="card"><h2>Kosten pro Kategorie (monatlich)</h2><div id="cats"></div></div>
+      <div class="card"><h2>Nächste Zahlungen (30 Tage)</h2><div id="upcoming"></div></div>
+    </div>
+  </section>
+
+  <section data-view="subs" hidden>
+    <div class="card">
+      <div class="tools">
+        <input type="search" id="subQ" placeholder="Abos durchsuchen…" aria-label="Abos durchsuchen">
+        <select id="subCat" aria-label="Kategorie"></select>
+        <button id="csv">CSV-Export</button>
+        <button class="pri" id="addSub">+ Abo</button>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Name</th><th>Kategorie</th><th class="r">Betrag</th><th class="r">pro Monat</th><th>Nächste</th><th class="r">Rechnungen</th><th></th></tr></thead>
+        <tbody id="subRows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section data-view="inv" hidden>
+    <div class="card">
+      <div class="tools">
+        <input type="search" id="invQ" placeholder="Suche: Name, Abo, Kategorie, Datum, Betrag, Notiz, PDF-Inhalt…" aria-label="Rechnungen durchsuchen">
+        <select id="invSub" aria-label="Abo"></select>
+        <select id="invYear" aria-label="Jahr"></select>
+        <button class="pri" id="addInv">+ Rechnung</button>
+      </div>
+      <p class="mut" id="invSum"></p>
+      <div class="scroll"><table>
+        <thead><tr><th>Datum</th><th>Datei</th><th>Abo</th><th class="r">Betrag</th><th>Notiz</th><th></th></tr></thead>
+        <tbody id="invRows"></tbody>
+      </table></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="subDlg"><form method="dialog">
+  <h2 class="full" id="subTitle">Abo</h2>
+  <label class="full">Name<input name="name" required maxlength="80"></label>
+  <label>Kategorie<select name="cat"></select></label>
+  <label>Intervall<select name="interval"></select></label>
+  <label>Betrag<input name="amount" type="number" step="0.01" min="0" required></label>
+  <label>Währung<select name="cur"></select></label>
+  <label>Erste / nächste Zahlung<input name="next" type="date" required></label>
+  <label>Status<select name="active"><option value="1">Aktiv</option><option value="">Pausiert / gekündigt</option></select></label>
+  <label class="full">Notiz<textarea name="notes" rows="2" maxlength="500"></textarea></label>
+  <div class="acts"><button value="cancel" formnovalidate>Abbrechen</button><button class="pri" value="ok">Speichern</button></div>
+</form></dialog>
+
+<dialog id="invDlg"><form method="dialog">
+  <h2 class="full">Rechnung hochladen</h2>
+  <label class="full">Abo<select name="subId" required></select></label>
+  <label class="full">Datei(en) (PDF / Bild)<input name="file" type="file" accept="application/pdf,image/*" multiple required></label>
+  <label>Rechnungsdatum<input name="date" type="date" required></label>
+  <label>Betrag<input name="amount" type="number" step="0.01" min="0"></label>
+  <label class="full">Notiz<input name="notes" maxlength="300"></label>
+  <div class="acts"><button value="cancel" formnovalidate>Abbrechen</button><button class="pri" value="ok">Hochladen</button></div>
+</form></dialog>
+
+<div id="toast" role="status"></div>
+
+<script type="module">
+import { CATEGORIES, INTERVALS, CURRENCIES, nextDue, toBase, monthly, searchInvoices } from './lib.mjs';
+
+// Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web). See README.
+const CLIENT_ID = '';
+const SCOPE = 'https://www.googleapis.com/auth/drive.file openid email profile';
+const DATA_FILE = 'spendly-data.json', FOLDER = 'Spendly Rechnungen';
+const DRIVE = 'https://www.googleapis.com/drive/v3/files', UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
+
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const dt = (d) => new Date(d + 'T00:00');
+const today = () => new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
+const uid = () => crypto.randomUUID();
+const opts = (o, sel) => Object.entries(o).map(([k, v]) => `<option value="${esc(k)}"${k === sel ? ' selected' : ''}>${esc(Array.isArray(v) ? v[0] : v)}</option>`).join('');
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => (t.style.display = 'none'), 3500); };
+
+let db = { base: 'CHF', subs: [], invoices: [] }, dataId, folderId, rates = {}, hits = new Set();
+const fmt = (n, cur = db.base) => new Intl.NumberFormat('de-CH', { style: 'currency', currency: cur }).format(n || 0);
+const subById = (id) => db.subs.find((s) => s.id === id);
+
+// ---------- Auth (Google Identity Services, token stays in this tab only) ----------
+let token = JSON.parse(sessionStorage.getItem('tok') || 'null');
+let tokenClient;
+function login(prompt = '') {
+  tokenClient ??= google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPE, callback: () => {} });
+  return new Promise((res, rej) => {
+    tokenClient.callback = (r) => {
+      if (r.error) return rej(new Error(r.error));
+      token = { v: r.access_token, exp: Date.now() + (r.expires_in - 60) * 1000 };
+      sessionStorage.setItem('tok', JSON.stringify(token));
+      res();
+    };
+    tokenClient.error_callback = (e) => rej(new Error(e.type));
+    tokenClient.requestAccessToken({ prompt });
+  });
+}
+
+// ponytail: re-login after token expiry (1h) opens a popup without user gesture; browsers may block it → user clicks again
+async function api(url, opt = {}, retry = true) {
+  if (!token || token.exp < Date.now()) await login();
+  const r = await fetch(url, { ...opt, headers: { ...opt.headers, Authorization: `Bearer ${token.v}` } });
+  if (r.status === 401 && retry) { token = null; return api(url, opt, false); }
+  if (!r.ok) throw new Error(`Google API ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return r.status === 204 ? null : r.headers.get('content-type')?.includes('json') ? r.json() : r.text();
+}
+
+const find = async (q) => (await api(`${DRIVE}?q=${encodeURIComponent(q + ' and trashed=false')}&fields=files(id,webViewLink)&pageSize=1000`)).files;
+const multipart = (meta, blob, fields = 'id') => {
+  const fd = new FormData();
+  fd.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+  fd.append('file', blob);
+  return api(`${UPLOAD}?uploadType=multipart&fields=${fields}`, { method: 'POST', body: fd });
+};
+
+async function loadData() {
+  const [f] = await find(`name='${DATA_FILE}' and mimeType='application/json'`);
+  if (f) { dataId = f.id; const d = await api(`${DRIVE}/${f.id}?alt=media`); db = { ...db, ...(typeof d === 'string' ? JSON.parse(d) : d) }; }
+  else dataId = (await multipart({ name: DATA_FILE, mimeType: 'application/json' }, new Blob([JSON.stringify(db)], { type: 'application/json' }))).id;
+  const [folder] = await find(`name='${FOLDER}' and mimeType='application/vnd.google-apps.folder'`);
+  folderId = folder?.id ?? (await api(DRIVE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).id;
+}
+
+// ponytail: last write wins if two devices edit at the same time; add revision check (If-Match) if that ever bites
+async function save() {
+  render();
+  try { await api(`${UPLOAD}/${dataId}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(db) }); toast('Gespeichert ✓'); }
+  catch (e) { toast('Speichern fehlgeschlagen: ' + e.message); }
+}
+
+async function loadRates() {
+  try { rates = (await (await fetch(`https://api.frankfurter.dev/v1/latest?base=${db.base}`)).json()).rates || {}; }
+  catch { rates = {}; toast('Wechselkurse nicht verfügbar – Beträge unkonvertiert'); }
+}
+
+async function start() {
+  $('#loginBtn').disabled = true;
+  try {
+    if (!token || token.exp < Date.now()) await login();
+    const [me] = await Promise.all([api('https://www.googleapis.com/oauth2/v3/userinfo'), loadData()]);
+    $('#user').innerHTML = `${me.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(me.given_name || me.email)}</span><button id="logout">Abmelden</button>`;
+    $('#logout').onclick = () => { google.accounts.oauth2.revoke(token.v); sessionStorage.clear(); location.reload(); };
+    await loadRates();
+    $('#login').hidden = true; $('#top').hidden = $('#app').hidden = false;
+    render();
+  } catch (e) { toast('Anmeldung fehlgeschlagen: ' + e.message); }
+  $('#loginBtn').disabled = false;
+}
+
+// ---------- Rendering ----------
+const due = (s) => nextDue(s.next, s.interval, today());
+const active = () => db.subs.filter((s) => s.active);
+
+function render() {
+  $('#base').innerHTML = CURRENCIES.map((c) => `<option${c === db.base ? ' selected' : ''}>${c}</option>`).join('');
+  const act = active(), m = act.reduce((a, s) => a + monthly(s, db.base, rates), 0);
+  const nxt = act.map((s) => ({ s, d: due(s) })).sort((a, b) => a.d.localeCompare(b.d));
+
+  $('#kpis').innerHTML = [
+    ['Monatlich', fmt(m)], ['Jährlich', fmt(m * 12)], ['Aktive Abos', `${act.length} <small style="display:inline">/ ${db.subs.length}</small>`],
+    ['Nächste Zahlung', nxt[0] ? `${esc(nxt[0].s.name)} <small style="display:inline">${dt(nxt[0].d).toLocaleDateString('de-CH')}</small>` : '–'],
+  ].map(([k, v]) => `<div class="card kpi"><small>${k}</small><b>${v}</b></div>`).join('');
+
+  const byCat = {};
+  act.forEach((s) => (byCat[s.cat] = (byCat[s.cat] || 0) + monthly(s, db.base, rates)));
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats[0]?.[1] || 1;
+  $('#cats').innerHTML = cats.map(([c, v]) => `<div class="bar"><span>${esc(CATEGORIES[c])}</span><i style="width:${(v / max) * 100}%"></i><span class="r">${fmt(v)}</span></div>`).join('') || '<p class="empty">Noch keine Abos.</p>';
+
+  const in30 = new Date(Date.now() + 30 * 864e5).toLocaleDateString('sv');
+  $('#upcoming').innerHTML = nxt.filter((x) => x.d <= in30).map(({ s, d }) =>
+    `<div class="bar"><span>${esc(s.name)}</span><span class="mut">${dt(d).toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span><span class="r">${fmt(s.amount, s.cur)}</span></div>`).join('') || '<p class="empty">Keine Zahlungen in den nächsten 30 Tagen.</p>';
+
+  renderSubs(); renderInv();
+}
+
+function renderSubs() {
+  const q = $('#subQ').value.toLowerCase(), cat = $('#subCat').value;
+  $('#subCat').innerHTML = opts({ '': 'Alle Kategorien', ...CATEGORIES }, cat);
+  const count = (id) => db.invoices.filter((i) => i.subId === id).length;
+  const rows = db.subs
+    .filter((s) => (!cat || s.cat === cat) && (`${s.name} ${s.notes} ${CATEGORIES[s.cat]}`.toLowerCase().includes(q)))
+    .sort((a, b) => b.active - a.active || monthly(b, db.base, rates) - monthly(a, db.base, rates));
+  $('#subRows').innerHTML = rows.map((s) => `<tr class="${s.active ? '' : 'off'}">
+    <td><b>${esc(s.name)}</b>${s.notes ? `<br><small class="mut">${esc(s.notes)}</small>` : ''}</td>
+    <td><span class="pill">${esc(CATEGORIES[s.cat])}</span></td>
+    <td class="r">${fmt(s.amount, s.cur)}<br><small class="mut">${INTERVALS[s.interval][0]}</small></td>
+    <td class="r">${fmt(monthly(s, db.base, rates))}</td>
+    <td>${s.active ? dt(due(s)).toLocaleDateString('de-CH') : '<span class="mut">pausiert</span>'}</td>
+    <td class="r"><button class="ico" data-show="${s.id}" title="Rechnungen anzeigen">🧾 ${count(s.id)}</button></td>
+    <td class="r"><button class="ico" data-upl="${s.id}" title="Rechnung hochladen" aria-label="Rechnung hochladen">⬆️</button><button class="ico" data-edit="${s.id}" title="Bearbeiten" aria-label="Bearbeiten">✏️</button><button class="ico" data-del="${s.id}" title="Löschen" aria-label="Löschen">🗑️</button></td>
+  </tr>`).join('') || `<tr><td colspan="7" class="empty">${db.subs.length ? 'Keine Treffer.' : 'Noch keine Abos – leg mit „+ Abo“ los.'}</td></tr>`;
+}
+
+function renderInv() {
+  const sub = $('#invSub').value, year = $('#invYear').value;
+  $('#invSub').innerHTML = `<option value="">Alle Abos</option>` + db.subs.map((s) => `<option value="${s.id}"${s.id === sub ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
+  const years = [...new Set(db.invoices.map((i) => i.date.slice(0, 4)))].sort().reverse();
+  $('#invYear').innerHTML = `<option value="">Alle Jahre</option>` + years.map((y) => `<option${y === year ? ' selected' : ''}>${y}</option>`).join('');
+  const list = searchInvoices(db.invoices, db.subs, $('#invQ').value, hits)
+    .filter((i) => (!sub || i.subId === sub) && (!year || i.date.startsWith(year)))
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const sum = list.reduce((a, i) => a + toBase(i.amount || 0, i.cur, db.base, rates), 0);
+  $('#invSum').textContent = `${list.length} von ${db.invoices.length} Rechnungen · Summe ${fmt(sum)}`;
+  $('#invRows').innerHTML = list.map((i) => {
+    const s = subById(i.subId);
+    return `<tr>
+      <td>${dt(i.date).toLocaleDateString('de-CH')}</td>
+      <td><a href="${esc(i.link)}" target="_blank" rel="noopener">📄 ${esc(i.name)}</a></td>
+      <td>${esc(s?.name ?? '–')}<br><small class="mut">${esc(CATEGORIES[s?.cat] ?? '')}</small></td>
+      <td class="r">${i.amount ? fmt(i.amount, i.cur) : '–'}</td>
+      <td class="mut">${esc(i.notes)}</td>
+      <td class="r"><button class="ico" data-delinv="${i.id}" title="Löschen" aria-label="Rechnung löschen">🗑️</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" class="empty">${db.invoices.length ? 'Keine Treffer.' : 'Noch keine Rechnungen hochgeladen.'}</td></tr>`;
+}
+
+// ---------- Actions ----------
+function tab(name) {
+  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== name));
+}
+
+function editSub(s = { cat: 'media', interval: 'month', cur: db.base, next: today(), active: true }) {
+  const dlg = $('#subDlg'), f = dlg.querySelector('form');
+  $('#subTitle').textContent = s.id ? 'Abo bearbeiten' : 'Neues Abo';
+  f.cat.innerHTML = opts(CATEGORIES, s.cat);
+  f.interval.innerHTML = opts(INTERVALS, s.interval);
+  f.cur.innerHTML = CURRENCIES.map((c) => `<option${c === s.cur ? ' selected' : ''}>${c}</option>`).join('');
+  f.name.value = s.name ?? ''; f.amount.value = s.amount ?? ''; f.next.value = s.next; f.notes.value = s.notes ?? ''; f.active.value = s.active ? '1' : '';
+  dlg.onclose = () => {
+    if (dlg.returnValue !== 'ok') return;
+    const v = { name: f.name.value.trim(), cat: f.cat.value, interval: f.interval.value, amount: +f.amount.value, cur: f.cur.value, next: f.next.value, notes: f.notes.value.trim(), active: !!f.active.value };
+    if (s.id) Object.assign(s, v); else db.subs.push({ id: uid(), ...v });
+    save();
+  };
+  dlg.returnValue = ''; dlg.showModal();
+}
+
+function uploadInv(subId = db.subs[0]?.id) {
+  if (!db.subs.length) return toast('Lege zuerst ein Abo an.');
+  const dlg = $('#invDlg'), f = dlg.querySelector('form');
+  f.reset();
+  f.subId.innerHTML = db.subs.map((s) => `<option value="${s.id}"${s.id === subId ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
+  const fill = () => { f.amount.value = subById(f.subId.value)?.amount ?? ''; };
+  f.subId.onchange = fill; fill(); f.date.value = today();
+  dlg.onclose = async () => {
+    if (dlg.returnValue !== 'ok') return;
+    const s = subById(f.subId.value), files = [...f.file.files];
+    toast(`Lade ${files.length} Datei(en) hoch…`);
+    try {
+      for (const file of files) {
+        if (file.size > 25e6) { toast(`${file.name} ist grösser als 25 MB – übersprungen`); continue; }
+        const up = await multipart({ name: file.name, parents: [folderId], description: `${s.name} · ${f.date.value}` }, file, 'id,webViewLink');
+        db.invoices.push({ id: uid(), subId: s.id, fileId: up.id, link: up.webViewLink, name: file.name, date: f.date.value, amount: +f.amount.value || 0, cur: s.cur, notes: f.notes.value.trim() });
+      }
+    } catch (e) { toast('Upload fehlgeschlagen: ' + e.message); }
+    save();
+  };
+  dlg.returnValue = ''; dlg.showModal();
+}
+
+async function delInv(inv) {
+  try { await api(`${DRIVE}/${inv.fileId}`, { method: 'DELETE' }); }
+  catch (e) { if (!e.message.includes('404')) throw e; } // already gone in Drive → just drop the entry
+  db.invoices = db.invoices.filter((i) => i !== inv);
+}
+
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  try {
+    if (d.tab) tab(d.tab);
+    else if (d.edit) editSub(subById(d.edit));
+    else if (d.upl) uploadInv(d.upl);
+    else if (d.show) { $('#invSub').innerHTML = `<option value="${d.show}"></option>`; $('#invQ').value = ''; hits.clear(); tab('inv'); renderInv(); }
+    else if (d.del) {
+      const s = subById(d.del), inv = db.invoices.filter((i) => i.subId === s.id);
+      if (!confirm(`„${s.name}“ löschen?${inv.length ? `\nAuch ${inv.length} Rechnung(en) werden aus Google Drive gelöscht.` : ''}`)) return;
+      for (const i of inv) await delInv(i);
+      db.subs = db.subs.filter((x) => x !== s); save();
+    } else if (d.delinv) {
+      const inv = db.invoices.find((i) => i.id === d.delinv);
+      if (confirm(`Rechnung „${inv.name}“ löschen (auch aus Google Drive)?`)) { await delInv(inv); save(); }
+    }
+  } catch (err) { toast('Fehler: ' + err.message); }
+});
+
+$('#loginBtn').onclick = start;
+$('#addSub').onclick = () => editSub();
+$('#addInv').onclick = () => uploadInv();
+$('#subQ').oninput = $('#subCat').onchange = renderSubs;
+$('#invSub').onchange = $('#invYear').onchange = renderInv;
+$('#base').onchange = async (e) => { db.base = e.target.value; await loadRates(); save(); };
+
+// Interactive search: local metadata instantly, PDF/image text via Drive full-text index (debounced)
+let deb;
+$('#invQ').oninput = (e) => {
+  renderInv();
+  clearTimeout(deb);
+  const q = e.target.value.trim();
+  if (q.length < 3) { hits.clear(); return renderInv(); }
+  deb = setTimeout(async () => {
+    try {
+      const files = await find(`'${folderId}' in parents and fullText contains '${q.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`);
+      if ($('#invQ').value.trim() === q) { hits = new Set(files.map((f) => f.id)); renderInv(); }
+    } catch { /* full-text is a bonus; local search still works */ }
+  }, 400);
+};
+
+$('#csv').onclick = () => {
+  const head = ['Name', 'Kategorie', 'Betrag', 'Währung', 'Intervall', `Monatlich (${db.base})`, 'Nächste Zahlung', 'Aktiv', 'Notiz'];
+  const rows = db.subs.map((s) => [s.name, CATEGORIES[s.cat], s.amount, s.cur, INTERVALS[s.interval][0], monthly(s, db.base, rates).toFixed(2), due(s), s.active ? 'ja' : 'nein', s.notes]);
+  const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })), download: `abos-${today()}.csv` });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+
+if (!CLIENT_ID) { $('#setup').hidden = false; $('#loginBtn').disabled = true; }
+else if (token && token.exp > Date.now()) start();
+</script>
+</body>
+</html>
