@@ -1,45 +1,88 @@
 # 💸 Spendly
 
-Abos, Kosten und Rechnungen verwalten – eine statische Seite auf GitHub Pages, Login mit Google.
-Alle Daten liegen in **deinem eigenen Google Drive** (`spendly-data.json` + Ordner `Spendly Rechnungen`).
-Kein Server, keine Datenbank, keine Kosten. Die App sieht nur Dateien, die sie selbst angelegt hat (Scope `drive.file`).
+**Alle Abos, Kosten und Rechnungen an einem Ort – gespeichert in deinem eigenen Google Drive.**
 
-**Features:** Dashboard (Monats-/Jahreskosten, Kosten pro Kategorie, nächste Zahlungen) · Abos anlegen/bearbeiten/pausieren ·
-Multi-Währung CHF/EUR/USD/GBP mit Live-Kursen (frankfurter.dev) · Rechnungen (PDF/Bild) pro Abo hochladen ·
-Rechnungs-Sammlung mit Live-Suche über Name, Abo, Kategorie, Datum, Betrag, Notiz **und PDF-Inhalt** (Google-Drive-Volltextindex) ·
-Filter nach Abo/Jahr · CSV-Export · Dark Mode · Mobile.
+👉 **https://andrasmarro.github.io/spendly/**
 
-## Gastmodus
+![Spendly Übersicht](docs/dashboard.png)
 
-Ohne Anmeldung nutzbar: Abos liegen im `localStorage`, Rechnungsdateien in der IndexedDB des Browsers.
-Kein Sync zwischen Geräten, und **Browserdaten löschen = alles weg** (die App zeigt dazu einen Hinweis).
+Spendly zeigt dir auf einen Blick, wie viel dich deine Abos pro Monat und pro Jahr kosten, wofür das Geld draufgeht
+und welche Zahlungen als Nächstes fällig sind. Zu jedem Abo kannst du die Rechnungen ablegen und später in Sekunden wiederfinden.
 
-## Datenschutz
+---
 
-- Mit Google-Login liegen die Daten im Drive der Nutzer:in. Es gibt keinen Server: Der Zugriffstoken bleibt im Browser-Tab,
-  der Betreiber der Seite kann die Daten **nicht** sehen.
-- Die **Client ID ist kein Geheimnis**. Sie steht bei jeder Google-Web-App im ausgelieferten JavaScript (das ist so vorgesehen)
-  und gehört deshalb nicht in eine `.env`. Missbrauch verhindern die *Authorized JavaScript origins* in der Google Console:
-  Die ID funktioniert nur auf `https://andrasmarro.github.io`.
+## Deine Daten gehören dir
 
-## Einmalige Einrichtung: Google Client ID
+![So fliessen die Daten: Browser ↔ dein Google Drive](docs/drive.svg)
 
-1. https://console.cloud.google.com → neues Projekt anlegen.
-2. **APIs & Services → Library** → „Google Drive API“ aktivieren.
-3. **APIs & Services → OAuth consent screen** → External, App-Name eintragen, dich selbst als **Test user** hinzufügen
-   (oder „Publish app“ – `drive.file` braucht keine Google-Prüfung).
-4. **Credentials → Create credentials → OAuth client ID → Web application**
-   - Authorized JavaScript origins: `https://andrasmarro.github.io` (und `http://localhost:8000` zum lokalen Testen)
-5. Client ID in `index.html` bei `const CLIENT_ID = '…'` eintragen, committen – fertig.
+Du meldest dich mit Google an, und Spendly legt in **deinem Drive** zwei Dinge an:
 
-## Lokal starten / testen
+| In deinem Drive | Inhalt |
+|---|---|
+| 📄 `spendly-data.json` | Alle Abos, Kategorien und Einstellungen |
+| 📁 `Spendly Rechnungen` | Deine hochgeladenen Rechnungen als ganz normale PDFs/Bilder |
 
-```bash
-python3 -m http.server 8000   # → http://localhost:8000
-node lib.test.mjs             # Logik-Tests
-```
+- **Überall verfügbar:** Die Rechnungen liegen als echte Dateien in deinem Drive. Du kannst sie auch ohne Spendly öffnen,
+  teilen oder herunterladen, am Handy, am PC oder in der Drive-App.
+- **Kein Server, keine Datenbank:** Spendly läuft komplett im Browser und spricht direkt mit Google. Niemand ausser dir sieht deine Daten.
+- **Minimale Rechte:** Spendly darf nur Dateien sehen, die es selbst angelegt hat, nicht den Rest deines Drives.
+- **Gratis und werbefrei.**
+
+---
+
+## Abos im Griff
+
+![Abo-Liste](docs/abos.png)
+
+- Abos mit Betrag, Währung und Intervall erfassen (wöchentlich bis jährlich)
+- **CHF, EUR, USD, GBP** mit tagesaktuellen Wechselkursen, alles umgerechnet in deine Basiswährung
+- Nächste Zahlung wird automatisch weitergerechnet
+- Abos pausieren oder als gekündigt markieren, ohne die Historie zu verlieren
+- Export als **CSV** für Excel oder die Steuererklärung
+
+## Rechnungen hochladen
+
+![Rechnung hochladen](docs/upload.png)
+
+Mit einem Klick auf ⬆️ beim Abo lädst du eine oder mehrere Rechnungen (PDF oder Bild) hoch.
+Datum und Betrag sind schon vorausgefüllt.
+
+## Alles wiederfinden
+
+![Rechnungssuche](docs/rechnungen.png)
+
+Die Suche filtert schon beim Tippen nach Dateiname, Abo, Kategorie, Datum, Betrag und Notiz.
+Sie findet **sogar Text in deinen PDFs** (über die Volltextsuche von Google Drive).
+Zusätzlich kannst du nach Abo und Jahr filtern und siehst sofort die Summe der Treffer.
+
+## Am Handy & im Dark Mode
+
+<img src="docs/mobile-dark.png" alt="Spendly auf dem Handy im Dark Mode" width="300">
+
+---
 
 ## Kategorien
 
-Medien & Unterhaltung · Software & Cloud · Telefon & Internet · Wohnen & Energie · Versicherungen ·
-Mobilität · Gesundheit & Sport · Bildung · Finanzen & Mitgliedschaften · Sonstiges
+Klar abgegrenzt, ohne Doppelungen:
+
+| Kategorie | Beispiele |
+|---|---|
+| 🎬 Medien & Unterhaltung | Netflix, Spotify, Games, Zeitungen |
+| 💻 Software & Cloud | Adobe, iCloud, Microsoft 365, Domains |
+| 📱 Telefon & Internet | Handy-Abo, Internet, TV-Anschluss |
+| 🏠 Wohnen & Energie | Miete, Strom, Gas, Serafe |
+| 🛡️ Versicherungen | Krankenkasse, Haftpflicht, Hausrat |
+| 🚗 Mobilität | Halbtax/GA, Leasing, Parkplatz |
+| 💪 Gesundheit & Sport | Fitnesscenter, Sportverein |
+| 🎓 Bildung | Kurse, Sprach-Apps |
+| 🏦 Finanzen & Mitgliedschaften | Kontogebühren, Kreditkarte, Spenden |
+| 📦 Sonstiges | alles andere |
+
+## Ohne Anmeldung: Gastmodus
+
+Du willst Spendly nur ausprobieren? Mit **„Als Gast fortfahren“** speichert Spendly alles nur in deinem Browser.
+Das ist praktisch zum Testen, aber: **Wenn du die Browserdaten löschst, ist alles weg.** Für den Alltag lieber mit Google anmelden.
+
+---
+
+<sub>Entwicklung: statische Seite ohne Build-Schritt (`index.html` + `lib.mjs`). Lokal starten mit `python3 -m http.server 8000`, Tests mit `node lib.test.mjs`.</sub>
