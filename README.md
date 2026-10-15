@@ -9,6 +9,19 @@ Multi-Währung CHF/EUR/USD/GBP mit Live-Kursen (frankfurter.dev) · Rechnungen (
 Rechnungs-Sammlung mit Live-Suche über Name, Abo, Kategorie, Datum, Betrag, Notiz **und PDF-Inhalt** (Google-Drive-Volltextindex) ·
 Filter nach Abo/Jahr · CSV-Export · Dark Mode · Mobile.
 
+## Gastmodus
+
+Ohne Anmeldung nutzbar: Abos liegen im `localStorage`, Rechnungsdateien in der IndexedDB des Browsers.
+Kein Sync zwischen Geräten, und **Browserdaten löschen = alles weg** (die App zeigt dazu einen Hinweis).
+
+## Datenschutz
+
+- Mit Google-Login liegen die Daten im Drive der Nutzer:in. Es gibt keinen Server: Der Zugriffstoken bleibt im Browser-Tab,
+  der Betreiber der Seite kann die Daten **nicht** sehen.
+- Die **Client ID ist kein Geheimnis**. Sie steht bei jeder Google-Web-App im ausgelieferten JavaScript (das ist so vorgesehen)
+  und gehört deshalb nicht in eine `.env`. Missbrauch verhindern die *Authorized JavaScript origins* in der Google Console:
+  Die ID funktioniert nur auf `https://andrasmarro.github.io`.
+
 ## Einmalige Einrichtung: Google Client ID
 
 1. https://console.cloud.google.com → neues Projekt anlegen.

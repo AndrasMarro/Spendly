@@ -65,10 +65,13 @@
   <h1>💸 Spendly</h1>
   <p class="mut">Abos, Kosten und Rechnungen an einem Ort.<br>Deine Daten liegen in <b>deinem eigenen Google Drive</b>.</p>
   <button class="pri" id="loginBtn">Mit Google anmelden</button>
+  <button id="guestBtn">Als Gast fortfahren</button>
+  <p class="mut"><small>Gast: Daten bleiben nur in diesem Browser und sind weg, wenn du Browserdaten/Cache löschst.</small></p>
   <p id="setup" class="mut" hidden>⚠️ <code>CLIENT_ID</code> in <code>index.html</code> fehlt – siehe README.</p>
 </section>
 
 <main id="app" hidden>
+  <p id="guestWarn" class="card" hidden>⚠️ <b>Gastmodus:</b> Deine Daten liegen nur in diesem Browser. Browserdaten löschen = alles weg. Für Sync & Backup mit Google anmelden.</p>
   <section data-view="dash">
     <div class="kpis" id="kpis"></div>
     <div class="grid2">
@@ -151,7 +154,7 @@ const uid = () => crypto.randomUUID();
 const opts = (o, sel) => Object.entries(o).map(([k, v]) => `<option value="${esc(k)}"${k === sel ? ' selected' : ''}>${esc(Array.isArray(v) ? v[0] : v)}</option>`).join('');
 const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => (t.style.display = 'none'), 3500); };
 
-let db = { base: 'CHF', subs: [], invoices: [] }, dataId, folderId, rates = {}, hits = new Set();
+let db = { base: 'CHF', subs: [], invoices: [] }, dataId, folderId, rates = {}, hits = new Set(), guest = false;
 const fmt = (n, cur = db.base) => new Intl.NumberFormat('de-CH', { style: 'currency', currency: cur }).format(n || 0);
 const subById = (id) => db.subs.find((s) => s.id === id);
 
@@ -181,6 +184,14 @@ async function api(url, opt = {}, retry = true) {
   return r.status === 204 ? null : r.headers.get('content-type')?.includes('json') ? r.json() : r.text();
 }
 
+// Guest mode: data in localStorage, invoice files in IndexedDB (localStorage ~5 MB is too small for PDFs)
+const idb = (mode, fn) => new Promise((res, rej) => {
+  const o = indexedDB.open('spendly', 1);
+  o.onupgradeneeded = () => o.result.createObjectStore('files');
+  o.onerror = () => rej(o.error);
+  o.onsuccess = () => { const r = fn(o.result.transaction('files', mode).objectStore('files')); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); };
+});
+
 const find = async (q) => (await api(`${DRIVE}?q=${encodeURIComponent(q + ' and trashed=false')}&fields=files(id,webViewLink)&pageSize=1000`)).files;
 const multipart = (meta, blob, fields = 'id') => {
   const fd = new FormData();
@@ -190,6 +201,7 @@ const multipart = (meta, blob, fields = 'id') => {
 };
 
 async function loadData() {
+  if (guest) return (db = { ...db, ...JSON.parse(localStorage.getItem('spendly') || '{}') });
   const [f] = await find(`name='${DATA_FILE}' and mimeType='application/json'`);
   if (f) { dataId = f.id; const d = await api(`${DRIVE}/${f.id}?alt=media`); db = { ...db, ...(typeof d === 'string' ? JSON.parse(d) : d) }; }
   else dataId = (await multipart({ name: DATA_FILE, mimeType: 'application/json' }, new Blob([JSON.stringify(db)], { type: 'application/json' }))).id;
@@ -200,6 +212,11 @@ async function loadData() {
 // ponytail: last write wins if two devices edit at the same time; add revision check (If-Match) if that ever bites
 async function save() {
   render();
+  if (guest) {
+    try { localStorage.setItem('spendly', JSON.stringify(db)); toast('Gespeichert ✓ (nur in diesem Browser)'); }
+    catch (e) { toast('Speichern fehlgeschlagen: ' + e.message); }
+    return;
+  }
   try { await api(`${UPLOAD}/${dataId}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(db) }); toast('Gespeichert ✓'); }
   catch (e) { toast('Speichern fehlgeschlagen: ' + e.message); }
 }
@@ -209,18 +226,28 @@ async function loadRates() {
   catch { rates = {}; toast('Wechselkurse nicht verfügbar – Beträge unkonvertiert'); }
 }
 
-async function start() {
+async function start(asGuest = false) {
   $('#loginBtn').disabled = true;
   try {
-    if (!token || token.exp < Date.now()) await login();
-    const [me] = await Promise.all([api('https://www.googleapis.com/oauth2/v3/userinfo'), loadData()]);
-    $('#user').innerHTML = `${me.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(me.given_name || me.email)}</span><button id="logout">Abmelden</button>`;
-    $('#logout').onclick = () => { google.accounts.oauth2.revoke(token.v); sessionStorage.clear(); location.reload(); };
+    if (asGuest) {
+      guest = true;
+      localStorage.setItem('spendly-guest', '1');
+      navigator.storage?.persist?.(); // ask browser not to evict our data under storage pressure
+      await loadData();
+      $('#guestWarn').hidden = false;
+      $('#user').innerHTML = `<span>👤 Gast</span><button id="logout">Beenden</button>`;
+      $('#logout').onclick = () => { localStorage.removeItem('spendly-guest'); location.reload(); };
+    } else {
+      if (!token || token.exp < Date.now()) await login();
+      const [me] = await Promise.all([api('https://www.googleapis.com/oauth2/v3/userinfo'), loadData()]);
+      $('#user').innerHTML = `${me.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(me.given_name || me.email)}</span><button id="logout">Abmelden</button>`;
+      $('#logout').onclick = () => { google.accounts.oauth2.revoke(token.v); sessionStorage.clear(); location.reload(); };
+    }
     await loadRates();
     $('#login').hidden = true; $('#top').hidden = $('#app').hidden = false;
     render();
   } catch (e) { toast('Anmeldung fehlgeschlagen: ' + e.message); }
-  $('#loginBtn').disabled = false;
+  $('#loginBtn').disabled = !CLIENT_ID;
 }
 
 // ---------- Rendering ----------
@@ -281,7 +308,7 @@ function renderInv() {
     const s = subById(i.subId);
     return `<tr>
       <td>${dt(i.date).toLocaleDateString('de-CH')}</td>
-      <td><a href="${esc(i.link)}" target="_blank" rel="noopener">📄 ${esc(i.name)}</a></td>
+      <td><a href="${guest ? '#' : esc(i.link)}" ${guest ? `data-open="${esc(i.fileId)}"` : 'target="_blank" rel="noopener"'}>📄 ${esc(i.name)}</a></td>
       <td>${esc(s?.name ?? '–')}<br><small class="mut">${esc(CATEGORIES[s?.cat] ?? '')}</small></td>
       <td class="r">${i.amount ? fmt(i.amount, i.cur) : '–'}</td>
       <td class="mut">${esc(i.notes)}</td>
@@ -326,7 +353,8 @@ function uploadInv(subId = db.subs[0]?.id) {
     try {
       for (const file of files) {
         if (file.size > 25e6) { toast(`${file.name} ist grösser als 25 MB – übersprungen`); continue; }
-        const up = await multipart({ name: file.name, parents: [folderId], description: `${s.name} · ${f.date.value}` }, file, 'id,webViewLink');
+        const up = guest ? { id: uid(), webViewLink: '' } : await multipart({ name: file.name, parents: [folderId], description: `${s.name} · ${f.date.value}` }, file, 'id,webViewLink');
+        if (guest) await idb('readwrite', (st) => st.put(file, up.id));
         db.invoices.push({ id: uid(), subId: s.id, fileId: up.id, link: up.webViewLink, name: file.name, date: f.date.value, amount: +f.amount.value || 0, cur: s.cur, notes: f.notes.value.trim() });
       }
     } catch (e) { toast('Upload fehlgeschlagen: ' + e.message); }
@@ -336,16 +364,21 @@ function uploadInv(subId = db.subs[0]?.id) {
 }
 
 async function delInv(inv) {
+  if (guest) { await idb('readwrite', (st) => st.delete(inv.fileId)); db.invoices = db.invoices.filter((i) => i !== inv); return; }
   try { await api(`${DRIVE}/${inv.fileId}`, { method: 'DELETE' }); }
   catch (e) { if (!e.message.includes('404')) throw e; } // already gone in Drive → just drop the entry
   db.invoices = db.invoices.filter((i) => i !== inv);
 }
 
 document.addEventListener('click', async (e) => {
-  const b = e.target.closest('button'); if (!b) return;
+  const b = e.target.closest('button,[data-open]'); if (!b) return;
   const d = b.dataset;
   try {
-    if (d.tab) tab(d.tab);
+    if (d.open) {
+      e.preventDefault();
+      const blob = await idb('readonly', (st) => st.get(d.open));
+      blob ? window.open(URL.createObjectURL(blob), '_blank') : toast('Datei nicht mehr im Browser vorhanden');
+    } else if (d.tab) tab(d.tab);
     else if (d.edit) editSub(subById(d.edit));
     else if (d.upl) uploadInv(d.upl);
     else if (d.show) { $('#invSub').innerHTML = `<option value="${d.show}"></option>`; $('#invQ').value = ''; hits.clear(); tab('inv'); renderInv(); }
@@ -374,7 +407,7 @@ $('#invQ').oninput = (e) => {
   renderInv();
   clearTimeout(deb);
   const q = e.target.value.trim();
-  if (q.length < 3) { hits.clear(); return renderInv(); }
+  if (guest || q.length < 3) { hits.clear(); return renderInv(); }
   deb = setTimeout(async () => {
     try {
       const files = await find(`'${folderId}' in parents and fullText contains '${q.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`);
@@ -391,8 +424,10 @@ $('#csv').onclick = () => {
   a.click(); URL.revokeObjectURL(a.href);
 };
 
+$('#guestBtn').onclick = () => start(true);
 if (!CLIENT_ID) { $('#setup').hidden = false; $('#loginBtn').disabled = true; }
-else if (token && token.exp > Date.now()) start();
+if (localStorage.getItem('spendly-guest')) start(true);
+else if (CLIENT_ID && token && token.exp > Date.now()) start();
 </script>
 </body>
 </html>
