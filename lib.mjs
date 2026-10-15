@@ -10,20 +10,23 @@ export const CATEGORIES = {
   health: '💪 Gesundheit & Sport',     // Fitness, Vereine (Sport), Apotheke-Abos
   education: '🎓 Bildung',             // Kurse, Sprach-Apps, Fachzeitschriften
   finance: '🏦 Finanzen & Mitgliedschaften', // Kontogebühren, Kreditkarte, Spenden, Verbände
+  invest: '📈 Sparen & Investieren',   // ETF-/Aktien-Sparpläne, Säule 3a – zählt nicht als Kosten
   other: '📦 Sonstiges',
 };
 
 export const INTERVALS = {
   week: ['Wöchentlich', 52 / 12],
   month: ['Monatlich', 1],
+  bimonth: ['Alle 2 Monate', 1 / 2],
   quarter: ['Vierteljährlich', 1 / 3],
+  tertial: ['Alle 4 Monate', 1 / 4],
   half: ['Halbjährlich', 1 / 6],
   year: ['Jährlich', 1 / 12],
 };
 
 export const CURRENCIES = ['CHF', 'EUR', 'USD', 'GBP'];
 
-const MONTHS = { month: 1, quarter: 3, half: 6, year: 12 };
+const MONTHS = { month: 1, bimonth: 2, quarter: 3, tertial: 4, half: 6, year: 12 };
 const iso = (d) => d.toISOString().slice(0, 10);
 
 // k-th occurrence after `start`, computed from the anchor so 31. Jan → 28./29. Feb → 31. Mär doesn't drift
@@ -62,4 +65,22 @@ export function searchInvoices(invoices, subs, q, hits = new Set()) {
       .join(' ').toLowerCase();
     return words.every((w) => hay.includes(w));
   });
+}
+
+export const isInvest = (s) => s.cat === 'invest';
+
+// Payments falling into each of the next n calendar months (starting with today's month), split into costs / investments
+export function forecast(subs, base, rates, today, n = 12) {
+  const [y, m] = today.split('-').map(Number);
+  const months = Array.from({ length: n }, (_, i) => ({ key: iso(new Date(Date.UTC(y, m - 1 + i, 1))).slice(0, 7), cost: 0, invest: 0 }));
+  const end = iso(new Date(Date.UTC(y, m - 1 + n, 1)));
+  for (const s of subs) {
+    if (!s.active || !s.next) continue;
+    const v = toBase(s.amount, s.cur, base, rates);
+    for (let k = 0, d = s.next; d < end; d = addInterval(s.next, s.interval, ++k)) {
+      const b = months.find((x) => d.startsWith(x.key));
+      if (b) b[isInvest(s) ? 'invest' : 'cost'] += v;
+    }
+  }
+  return months;
 }

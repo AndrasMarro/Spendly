@@ -6,8 +6,8 @@
 
 ![Spendly Übersicht](docs/dashboard.png)
 
-Spendly zeigt dir auf einen Blick, wie viel dich deine Abos pro Monat und pro Jahr kosten, wofür das Geld draufgeht
-und welche Zahlungen als Nächstes fällig sind. Zu jedem Abo kannst du die Rechnungen ablegen und später in Sekunden wiederfinden.
+Spendly zeigt dir auf einen Blick, wie viel dich deine Abos pro Monat und pro Jahr kosten, wofür das Geld draufgeht,
+wie viel du in ETFs & Aktien investierst und welche Zahlungen in den nächsten 12 Monaten anstehen. Zu jedem Abo kannst du die Rechnungen ablegen und später in Sekunden wiederfinden.
 
 ---
 
@@ -34,8 +34,9 @@ Du meldest dich mit Google an, und Spendly legt in **deinem Drive** zwei Dinge a
 
 ![Abo-Liste](docs/abos.png)
 
-- Abos mit Betrag, Währung und Intervall erfassen (wöchentlich bis jährlich)
-- **CHF, EUR, USD, GBP** mit tagesaktuellen Wechselkursen, alles umgerechnet in deine Basiswährung
+- Abos mit Betrag, Währung und Intervall erfassen (wöchentlich, monatlich, alle 2 Monate, vierteljährlich, alle 4 Monate, halbjährlich, jährlich)
+- **ETF- & Aktien-Sparpläne, Säule 3a** in der Kategorie *Sparen & Investieren*. Sie werden getrennt von den Fixkosten ausgewiesen
+- **Rund 30 Währungen** (CHF, EUR, USD, GBP, HUF …) mit tagesaktuellen EZB-Kursen, alles umgerechnet in deine Basiswährung
 - Nächste Zahlung wird automatisch weitergerechnet
 - Abos pausieren oder als gekündigt markieren, ohne die Historie zu verlieren
 - Export als **CSV** für Excel oder die Steuererklärung
@@ -55,7 +56,12 @@ Die Suche filtert schon beim Tippen nach Dateiname, Abo, Kategorie, Datum, Betra
 Sie findet **sogar Text in deinen PDFs** (über die Volltextsuche von Google Drive).
 Zusätzlich kannst du nach Abo und Jahr filtern und siehst sofort die Summe der Treffer.
 
-## Am Handy & im Dark Mode
+## Hell, Gedimmt oder Dunkel
+
+Im Menü hinter deinem Profilbild wählst du das Design (oder automatisch nach System), die Basiswährung,
+und dort findest du auch *Alle Daten löschen*.
+
+![Gedimmtes Design mit Menü](docs/themes.png)
 
 <img src="docs/mobile-dark.png" alt="Spendly auf dem Handy im Dark Mode" width="300">
 
@@ -76,12 +82,14 @@ Klar abgegrenzt, ohne Doppelungen:
 | 💪 Gesundheit & Sport | Fitnesscenter, Sportverein |
 | 🎓 Bildung | Kurse, Sprach-Apps |
 | 🏦 Finanzen & Mitgliedschaften | Kontogebühren, Kreditkarte, Spenden |
+| 📈 Sparen & Investieren | ETF-Sparplan, Aktien, Säule 3a (zählt nicht als Kosten) |
 | 📦 Sonstiges | alles andere |
 
 ## Ohne Anmeldung: Gastmodus
 
 Du willst Spendly nur ausprobieren? Mit **„Als Gast fortfahren“** speichert Spendly alles nur in deinem Browser.
 Das ist praktisch zum Testen, aber: **Wenn du die Browserdaten löschst, ist alles weg.** Für den Alltag lieber mit Google anmelden.
+Über *Mit Google anmelden* im Gastmodus kannst du deine Gastdaten samt Rechnungen jederzeit ins Drive übernehmen.
 
 ---
 

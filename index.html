@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spendly</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mut:#667085; --line:#e4e7ec; --acc:#4f46e5; --acc2:#eef2ff; --bad:#dc2626; color-scheme: light dark; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0f1115; --card:#181b22; --fg:#e6e8ec; --mut:#98a2b3; --line:#2a2f3a; --acc:#818cf8; --acc2:#1e2140; } }
+  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mut:#667085; --line:#e4e7ec; --acc:#4f46e5; --acc2:#eef2ff; --bad:#dc2626; --s1:#2a78d6; --s2:#eb6834; color-scheme: light; }
+  :root[data-theme=dark] { --bg:#0b0c0f; --card:#15171c; --fg:#e8eaee; --mut:#9aa3b2; --line:#262a33; --acc:#818cf8; --acc2:#1e2140; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme]) { --bg:#0b0c0f; --card:#15171c; --fg:#e8eaee; --mut:#9aa3b2; --line:#262a33; --acc:#818cf8; --acc2:#1e2140; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; } }
+  :root[data-theme=dim] { --bg:#22272e; --card:#2d333b; --fg:#e1e4e8; --mut:#a3acb9; --line:#3d444d; --acc:#8b93f8; --acc2:#373c5e; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin:0; font:15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--fg); }
-  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
   header h1 { font-size:18px; margin:0 12px 0 0; }
   nav { display:flex; gap:4px; flex:1; }
   nav button { background:none; border:0; padding:8px 12px; border-radius:8px; color:var(--mut); font-weight:600; }
@@ -23,27 +26,35 @@
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:760px){ .grid2 { grid-template-columns:1fr; } }
   h2 { font-size:16px; margin:0 0 12px; }
   .bar { display:grid; grid-template-columns:minmax(0,180px) 1fr auto; gap:8px; align-items:center; margin:6px 0; font-size:14px; }
+  @media (max-width:500px){ .bar { grid-template-columns:minmax(0,130px) 1fr auto; } }
   .bar span:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar i { display:block; height:10px; border-radius:5px; background:var(--acc); }
+  .bar i { display:block; height:10px; border-radius:0 4px 4px 0; background:var(--s1); min-width:2px; }
+  .legend { display:flex; gap:16px; font-size:13px; color:var(--mut); margin:-4px 0 8px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; }
+  .chart { width:100%; height:auto; display:block; } .chart text { font-size:11px; fill:var(--mut); } .chart .grid { stroke:var(--line); }
+  .chart .hit { fill:transparent; } .chart g:hover .hit { fill:var(--acc2); }
   table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
   th { color:var(--mut); font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  tr.grp td { background:var(--acc2); font-weight:600; } tr.tot td { font-weight:700; border-top:2px solid var(--line); }
   .r { text-align:right; white-space:nowrap; } .mut { color:var(--mut); } .off { opacity:.45; }
   .scroll { overflow-x:auto; }
   .tools { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; } .tools input[type=search] { flex:1; min-width:180px; }
   input, select, textarea, button { font:inherit; color:inherit; }
   input, select, textarea { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%; }
-  .tools select, .tools input, header select { width:auto; }
+  .tools select, .tools input { width:auto; }
   button { cursor:pointer; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:8px 12px; }
   button.pri { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+  button.bad { color:var(--bad); border-color:var(--bad); }
   button.ico { padding:4px 8px; border:0; background:none; }
-  button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
   dialog { border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--fg); width:min(520px,calc(100vw - 32px)); padding:20px; }
   dialog::backdrop { background:#0007; }
-  dialog form { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; } dialog label { display:grid; gap:4px; font-size:13px; color:var(--mut); }
+  dialog form { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; } dialog label, .menu label { display:grid; gap:4px; font-size:13px; color:var(--mut); }
   dialog .full { grid-column:1/-1; } dialog .acts { grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
   .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:99px; background:var(--acc2); color:var(--acc); white-space:nowrap; }
   #login { max-width:420px; margin:12vh auto; text-align:center; }
-  #user { display:flex; align-items:center; gap:8px; font-size:13px; } #user img { width:28px; height:28px; border-radius:50%; }
+  #menu { position:relative; } #menu summary { list-style:none; cursor:pointer; border-radius:50%; } #menu summary::-webkit-details-marker { display:none; }
+  .av { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:var(--acc); color:#fff; font-weight:700; object-fit:cover; }
+  .menu { position:absolute; right:0; top:46px; width:min(280px,calc(100vw - 32px)); display:grid; gap:10px; z-index:10; box-shadow:0 8px 24px #0004; margin:0; }
   #toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:14px; display:none; z-index:20; }
   .empty { color:var(--mut); text-align:center; padding:24px; }
   [hidden] { display:none !important; }
@@ -57,8 +68,17 @@
     <button data-tab="subs">Abos</button>
     <button data-tab="inv">Rechnungen</button>
   </nav>
-  <select id="base" title="Basiswährung" aria-label="Basiswährung"></select>
-  <div id="user"></div>
+  <details id="menu">
+    <summary id="avatar" aria-label="Menü"></summary>
+    <div class="menu card">
+      <div id="who"></div>
+      <label>Design<select id="theme"><option value="">Automatisch</option><option value="light">Hell</option><option value="dim">Gedimmt</option><option value="dark">Dunkel</option></select></label>
+      <label>Basiswährung<select id="base"></select></label>
+      <button class="pri" data-google="1" hidden>Mit Google anmelden</button>
+      <button id="logout"></button>
+      <button id="wipe" class="bad">Alle Daten löschen</button>
+    </div>
+  </details>
 </header>
 
 <section id="login" class="card">
@@ -71,12 +91,25 @@
 </section>
 
 <main id="app" hidden>
-  <p id="guestWarn" class="card" hidden>⚠️ <b>Gastmodus:</b> Deine Daten liegen nur in diesem Browser. Browserdaten löschen = alles weg. Für Sync & Backup mit Google anmelden.</p>
+  <p id="guestWarn" class="card" hidden>⚠️ <b>Gastmodus:</b> Deine Daten liegen nur in diesem Browser. Browserdaten löschen = alles weg.
+    <button class="pri" data-google="1">Mit Google anmelden</button></p>
   <section data-view="dash">
     <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <h2>Zahlungen der nächsten 12 Monate <small class="mut" id="fcCur"></small></h2>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Fixkosten</span><span><i style="background:var(--s2)"></i>Sparen & Investieren</span></div>
+      <div id="forecast"></div>
+    </div>
     <div class="grid2">
-      <div class="card"><h2>Kosten pro Kategorie (monatlich)</h2><div id="cats"></div></div>
+      <div class="card"><h2>Fixkosten pro Kategorie (monatlich)</h2><div id="cats"></div></div>
       <div class="card"><h2>Nächste Zahlungen (30 Tage)</h2><div id="upcoming"></div></div>
+    </div>
+    <div class="card">
+      <h2>Alle Posten <small class="mut" id="allCount"></small></h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Name</th><th>Intervall</th><th class="r">Betrag</th><th class="r">pro Monat</th><th class="r">pro Jahr</th><th>Nächste</th></tr></thead>
+        <tbody id="allRows"></tbody>
+      </table></div>
     </div>
   </section>
 
@@ -86,7 +119,7 @@
         <input type="search" id="subQ" placeholder="Abos durchsuchen…" aria-label="Abos durchsuchen">
         <select id="subCat" aria-label="Kategorie"></select>
         <button id="csv">CSV-Export</button>
-        <button class="pri" id="addSub">+ Abo</button>
+        <button class="pri" id="addSub">+ Abo / Sparplan</button>
       </div>
       <div class="scroll"><table>
         <thead><tr><th>Name</th><th>Kategorie</th><th class="r">Betrag</th><th class="r">pro Monat</th><th>Nächste</th><th class="r">Rechnungen</th><th></th></tr></thead>
@@ -114,14 +147,14 @@
 
 <dialog id="subDlg"><form method="dialog">
   <h2 class="full" id="subTitle">Abo</h2>
-  <label class="full">Name<input name="name" required maxlength="80"></label>
+  <label class="full">Name<input name="name" required maxlength="80" placeholder="z.B. Netflix oder ETF-Sparplan VWRL"></label>
   <label>Kategorie<select name="cat"></select></label>
   <label>Intervall<select name="interval"></select></label>
   <label>Betrag<input name="amount" type="number" step="0.01" min="0" required></label>
   <label>Währung<select name="cur"></select></label>
   <label>Erste / nächste Zahlung<input name="next" type="date" required></label>
   <label>Status<select name="active"><option value="1">Aktiv</option><option value="">Pausiert / gekündigt</option></select></label>
-  <label class="full">Notiz<textarea name="notes" rows="2" maxlength="500"></textarea></label>
+  <label class="full">Notiz<textarea name="notes" rows="2" maxlength="500" placeholder="z.B. ISIN, Vertragsnummer, Kündigungsfrist"></textarea></label>
   <div class="acts"><button value="cancel" formnovalidate>Abbrechen</button><button class="pri" value="ok">Speichern</button></div>
 </form></dialog>
 
@@ -138,13 +171,14 @@
 <div id="toast" role="status"></div>
 
 <script type="module">
-import { CATEGORIES, INTERVALS, CURRENCIES, nextDue, toBase, monthly, searchInvoices } from './lib.mjs';
+import { CATEGORIES, INTERVALS, CURRENCIES, nextDue, toBase, monthly, searchInvoices, isInvest, forecast } from './lib.mjs';
 
 // Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web). See README.
 const CLIENT_ID = '738986094822-dv3bhqvs13agos48ipu6oaesmsg1ebo9.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/drive.file openid email profile';
 const DATA_FILE = 'spendly-data.json', FOLDER = 'Spendly Rechnungen';
 const DRIVE = 'https://www.googleapis.com/drive/v3/files', UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
+const FX = 'https://api.frankfurter.dev/v1';
 
 const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -155,6 +189,8 @@ const opts = (o, sel) => Object.entries(o).map(([k, v]) => `<option value="${esc
 const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => (t.style.display = 'none'), 3500); };
 
 let db = { base: 'CHF', subs: [], invoices: [] }, dataId, folderId, rates = {}, hits = new Set(), guest = false;
+let currencies = Object.fromEntries(CURRENCIES.map((c) => [c, c])); // replaced by the full ECB list from frankfurter
+const curOpts = (sel) => opts(Object.fromEntries(Object.entries({ [sel]: sel, ...currencies }).map(([k, v]) => [k, k === v ? k : `${k} – ${v}`])), sel);
 const fmt = (n, cur = db.base) => new Intl.NumberFormat('de-CH', { style: 'currency', currency: cur }).format(n || 0);
 const subById = (id) => db.subs.find((s) => s.id === id);
 
@@ -170,7 +206,7 @@ function login(prompt = '') {
       sessionStorage.setItem('tok', JSON.stringify(token));
       res();
     };
-    tokenClient.error_callback = (e) => rej(new Error(e.type));
+    tokenClient.error_callback = (e) => rej(new Error(e.type === 'popup_failed_to_open' ? 'Pop-up blockiert – bitte Pop-ups für diese Seite erlauben' : e.type));
     tokenClient.requestAccessToken({ prompt });
   });
 }
@@ -199,14 +235,16 @@ const multipart = (meta, blob, fields = 'id') => {
   fd.append('file', blob);
   return api(`${UPLOAD}?uploadType=multipart&fields=${fields}`, { method: 'POST', body: fd });
 };
+const newFolder = async () => (await api(DRIVE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).id;
 
 async function loadData() {
-  if (guest) return (db = { ...db, ...JSON.parse(localStorage.getItem('spendly') || '{}') });
+  if (guest) return (db = { base: 'CHF', subs: [], invoices: [], ...JSON.parse(localStorage.getItem('spendly') || '{}') });
+  db = { base: 'CHF', subs: [], invoices: [] };
   const [f] = await find(`name='${DATA_FILE}' and mimeType='application/json'`);
   if (f) { dataId = f.id; const d = await api(`${DRIVE}/${f.id}?alt=media`); db = { ...db, ...(typeof d === 'string' ? JSON.parse(d) : d) }; }
   else dataId = (await multipart({ name: DATA_FILE, mimeType: 'application/json' }, new Blob([JSON.stringify(db)], { type: 'application/json' }))).id;
   const [folder] = await find(`name='${FOLDER}' and mimeType='application/vnd.google-apps.folder'`);
-  folderId = folder?.id ?? (await api(DRIVE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).id;
+  folderId = folder?.id ?? (await newFolder());
 }
 
 // ponytail: last write wins if two devices edit at the same time; add revision check (If-Match) if that ever bites
@@ -222,58 +260,143 @@ async function save() {
 }
 
 async function loadRates() {
-  try { rates = (await (await fetch(`https://api.frankfurter.dev/v1/latest?base=${db.base}`)).json()).rates || {}; }
-  catch { rates = {}; toast('Wechselkurse nicht verfügbar – Beträge unkonvertiert'); }
+  try {
+    const [r, c] = await Promise.all([fetch(`${FX}/latest?base=${db.base}`), fetch(`${FX}/currencies`)].map((p) => p.then((x) => x.json())));
+    rates = r.rates || {}; currencies = c;
+  } catch { rates = {}; toast('Wechselkurse nicht verfügbar – Beträge unkonvertiert'); }
 }
 
+// returns true when the app is up
 async function start(asGuest = false) {
   $('#loginBtn').disabled = true;
   try {
+    guest = asGuest;
     if (asGuest) {
-      guest = true;
       localStorage.setItem('spendly-guest', '1');
       navigator.storage?.persist?.(); // ask browser not to evict our data under storage pressure
       await loadData();
-      $('#guestWarn').hidden = false;
-      $('#user').innerHTML = `<span>👤 Gast</span><button id="logout">Beenden</button>`;
+      $('#avatar').innerHTML = `<span class="av" aria-hidden="true">👤</span>`;
+      $('#who').innerHTML = `<b>Gast</b><br><small class="mut">Daten nur in diesem Browser</small>`;
+      $('#logout').textContent = 'Gastmodus beenden';
       $('#logout').onclick = () => { localStorage.removeItem('spendly-guest'); location.reload(); };
     } else {
       if (!token || token.exp < Date.now()) await login();
       const [me] = await Promise.all([api('https://www.googleapis.com/oauth2/v3/userinfo'), loadData()]);
-      $('#user').innerHTML = `${me.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(me.given_name || me.email)}</span><button id="logout">Abmelden</button>`;
+      const initial = esc((me.given_name || me.email || '?')[0].toUpperCase());
+      $('#avatar').innerHTML = me.picture
+        ? `<img class="av" src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=av>${initial}</span>'">`
+        : `<span class="av">${initial}</span>`;
+      $('#who').innerHTML = `<b>${esc(me.name || me.given_name || '')}</b><br><small class="mut">${esc(me.email)}</small>`;
+      $('#logout').textContent = 'Abmelden';
       $('#logout').onclick = () => { google.accounts.oauth2.revoke(token.v); sessionStorage.clear(); location.reload(); };
     }
+    document.querySelectorAll('[data-google]').forEach((b) => (b.hidden = !guest || !CLIENT_ID));
+    $('#guestWarn').hidden = !guest;
     await loadRates();
     $('#login').hidden = true; $('#top').hidden = $('#app').hidden = false;
     render();
-  } catch (e) { toast('Anmeldung fehlgeschlagen: ' + e.message); }
-  $('#loginBtn').disabled = !CLIENT_ID;
+    return true;
+  } catch (e) { toast('Anmeldung fehlgeschlagen: ' + e.message); return false; }
+  finally { $('#loginBtn').disabled = !CLIENT_ID; }
+}
+
+// Guest → Google: log in, then offer to move guest data (incl. invoice files) into Drive
+async function guestToGoogle() {
+  const old = db;
+  if (!(await start())) return start(true); // login failed/cancelled → stay guest
+  localStorage.removeItem('spendly-guest');
+  if (!old.subs.length || !confirm(`${old.subs.length} Abo(s) und ${old.invoices.length} Rechnung(en) aus dem Gastmodus in dein Google Drive übernehmen?`)) return;
+  toast('Übernehme Gastdaten…');
+  for (const inv of old.invoices) {
+    const blob = await idb('readonly', (st) => st.get(inv.fileId));
+    if (!blob) continue;
+    const up = await multipart({ name: inv.name, parents: [folderId] }, blob, 'id,webViewLink');
+    db.invoices.push({ ...inv, fileId: up.id, link: up.webViewLink });
+  }
+  db.subs.push(...old.subs);
+  await save();
+  localStorage.removeItem('spendly'); await idb('readwrite', (st) => st.clear());
+}
+
+async function wipe() {
+  if (prompt('Alle Abos, Sparpläne und Rechnungen löschen?\nTippe LÖSCHEN zum Bestätigen.')?.trim().toUpperCase() !== 'LÖSCHEN') return;
+  if (guest) await idb('readwrite', (st) => st.clear());
+  else { // trash the whole invoice folder in one call (recoverable from Drive's bin for 30 days)
+    await api(`${DRIVE}/${folderId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }) });
+    folderId = await newFolder();
+  }
+  db = { base: db.base, subs: [], invoices: [] };
+  $('#menu').open = false;
+  save();
 }
 
 // ---------- Rendering ----------
 const due = (s) => nextDue(s.next, s.interval, today());
 const active = () => db.subs.filter((s) => s.active);
+const mon = (s) => monthly(s, db.base, rates);
+const sum = (list) => list.reduce((a, s) => a + mon(s), 0);
+const day = (d) => dt(d).toLocaleDateString('de-CH');
 
 function render() {
-  $('#base').innerHTML = CURRENCIES.map((c) => `<option${c === db.base ? ' selected' : ''}>${c}</option>`).join('');
-  const act = active(), m = act.reduce((a, s) => a + monthly(s, db.base, rates), 0);
+  $('#base').innerHTML = curOpts(db.base);
+  const act = active(), costs = act.filter((s) => !isInvest(s)), inv = act.filter(isInvest);
   const nxt = act.map((s) => ({ s, d: due(s) })).sort((a, b) => a.d.localeCompare(b.d));
 
   $('#kpis').innerHTML = [
-    ['Monatlich', fmt(m)], ['Jährlich', fmt(m * 12)], ['Aktive Abos', `${act.length} <small style="display:inline">/ ${db.subs.length}</small>`],
-    ['Nächste Zahlung', nxt[0] ? `${esc(nxt[0].s.name)} <small style="display:inline">${dt(nxt[0].d).toLocaleDateString('de-CH')}</small>` : '–'],
+    ['Fixkosten / Monat', fmt(sum(costs))], ['Fixkosten / Jahr', fmt(sum(costs) * 12)], ['Investiert / Monat', fmt(sum(inv))],
+    ['Nächste Zahlung', nxt[0] ? `${esc(nxt[0].s.name)} <small style="display:inline">${day(nxt[0].d)}</small>` : '–'],
   ].map(([k, v]) => `<div class="card kpi"><small>${k}</small><b>${v}</b></div>`).join('');
 
+  $('#fcCur').textContent = `(${db.base})`;
+  $('#forecast').innerHTML = act.length ? forecastChart() : '<p class="empty">Noch keine aktiven Posten.</p>';
+
   const byCat = {};
-  act.forEach((s) => (byCat[s.cat] = (byCat[s.cat] || 0) + monthly(s, db.base, rates)));
-  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats[0]?.[1] || 1;
-  $('#cats').innerHTML = cats.map(([c, v]) => `<div class="bar"><span>${esc(CATEGORIES[c])}</span><i style="width:${(v / max) * 100}%"></i><span class="r">${fmt(v)}</span></div>`).join('') || '<p class="empty">Noch keine Abos.</p>';
+  costs.forEach((s) => (byCat[s.cat] = (byCat[s.cat] || 0) + mon(s)));
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats[0]?.[1] || 1, total = sum(costs) || 1;
+  $('#cats').innerHTML = cats.map(([c, v]) => `<div class="bar"><span>${esc(CATEGORIES[c])}</span><i style="width:${(v / max) * 100}%"></i><span class="r">${fmt(v)} <small class="mut">${Math.round((v / total) * 100)}%</small></span></div>`).join('') || '<p class="empty">Noch keine Fixkosten.</p>';
 
   const in30 = new Date(Date.now() + 30 * 864e5).toLocaleDateString('sv');
   $('#upcoming').innerHTML = nxt.filter((x) => x.d <= in30).map(({ s, d }) =>
     `<div class="bar"><span>${esc(s.name)}</span><span class="mut">${dt(d).toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span><span class="r">${fmt(s.amount, s.cur)}</span></div>`).join('') || '<p class="empty">Keine Zahlungen in den nächsten 30 Tagen.</p>';
 
-  renderSubs(); renderInv();
+  renderAll(costs, inv); renderSubs(); renderInv();
+}
+
+// Overview table: all active items grouped by category, with subtotals and totals
+function renderAll(costs, inv) {
+  $('#allCount').textContent = `(${costs.length + inv.length} aktiv)`;
+  const row = (s) => `<tr><td>${esc(s.name)}</td><td class="mut">${INTERVALS[s.interval][0]}</td><td class="r">${fmt(s.amount, s.cur)}</td><td class="r">${fmt(mon(s))}</td><td class="r">${fmt(mon(s) * 12)}</td><td>${day(due(s))}</td></tr>`;
+  const sumRow = (label, list, cls) => `<tr class="${cls}"><td colspan="3">${label}</td><td class="r">${fmt(sum(list))}</td><td class="r">${fmt(sum(list) * 12)}</td><td></td></tr>`;
+  const groups = Object.keys(CATEGORIES).map((c) => [c, [...costs, ...inv].filter((s) => s.cat === c).sort((a, b) => mon(b) - mon(a))]).filter(([, l]) => l.length);
+  $('#allRows').innerHTML = groups.map(([c, l]) => sumRow(esc(CATEGORIES[c]), l, 'grp') + l.map(row).join('')).join('')
+    + (groups.length ? sumRow('Total Fixkosten', costs, 'tot') + (inv.length ? sumRow('Total Sparen & Investieren', inv, 'tot') : '') : '<tr><td colspan="6" class="empty">Noch keine aktiven Posten.</td></tr>');
+}
+
+// Stacked monthly bars (costs + investments), plain SVG. Native <title> tooltips per month column.
+function forecastChart() {
+  const data = forecast(db.subs, db.base, rates, today());
+  const W = 720, H = 240, L = 52, B = 22, T = 8, bw = (W - L) / data.length, ph = H - T - B;
+  const top = Math.max(...data.map((d) => d.cost + d.invest)) || 1, p = 10 ** Math.floor(Math.log10(top));
+  const max = [1, 2, 2.5, 5, 10].map((m) => m * p).find((m) => m >= top);
+  const y = (v) => T + ph * (1 - v / max);
+  const short = new Intl.NumberFormat('de-CH', { notation: 'compact', maximumFractionDigits: 1 });
+  // bar with 4px rounded top only, flat on the baseline
+  const bar = (x, yt, w, h, round, fill) => {
+    if (h <= 0) return '';
+    const r = round ? Math.min(4, h, w / 2) : 0;
+    return `<path fill="${fill}" d="M${x} ${yt + h}V${yt + r}Q${x} ${yt} ${x + r} ${yt}H${x + w - r}Q${x + w} ${yt} ${x + w} ${yt + r}V${yt + h}Z"/>`;
+  };
+  const grid = [0, 0.25, 0.5, 0.75, 1].map((f) => `<line class="grid" x1="${L}" x2="${W}" y1="${y(f * max)}" y2="${y(f * max)}"/><text x="${L - 8}" y="${y(f * max) + 4}" text-anchor="end">${short.format(f * max)}</text>`).join('');
+  const cols = data.map((d, i) => {
+    const x = L + i * bw + bw * 0.2, w = bw * 0.6, c1 = y(d.cost), i1 = y(d.cost + d.invest), gap = d.cost ? 2 : 0;
+    const m = dt(d.key + '-01'), name = m.toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
+    const lab = m.toLocaleDateString('de-CH', { month: 'short' }) + (m.getMonth() === 0 || i === 0 ? ` ${String(m.getFullYear()).slice(2)}` : '');
+    return `<g><title>${name}: Fixkosten ${fmt(d.cost)} · Investiert ${fmt(d.invest)} · Total ${fmt(d.cost + d.invest)}</title>
+      <rect class="hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${ph}" rx="4"/>
+      ${bar(x, c1, w, y(0) - c1, !d.invest, 'var(--s1)')}${bar(x, i1, w, c1 - gap - i1, true, 'var(--s2)')}
+      <text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${lab}</text></g>`;
+  }).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Zahlungen pro Monat, nächste 12 Monate – Details in der Tabelle unten">${grid}${cols}</svg>`;
 }
 
 function renderSubs() {
@@ -282,13 +405,13 @@ function renderSubs() {
   const count = (id) => db.invoices.filter((i) => i.subId === id).length;
   const rows = db.subs
     .filter((s) => (!cat || s.cat === cat) && (`${s.name} ${s.notes} ${CATEGORIES[s.cat]}`.toLowerCase().includes(q)))
-    .sort((a, b) => b.active - a.active || monthly(b, db.base, rates) - monthly(a, db.base, rates));
+    .sort((a, b) => b.active - a.active || mon(b) - mon(a));
   $('#subRows').innerHTML = rows.map((s) => `<tr class="${s.active ? '' : 'off'}">
     <td><b>${esc(s.name)}</b>${s.notes ? `<br><small class="mut">${esc(s.notes)}</small>` : ''}</td>
     <td><span class="pill">${esc(CATEGORIES[s.cat])}</span></td>
     <td class="r">${fmt(s.amount, s.cur)}<br><small class="mut">${INTERVALS[s.interval][0]}</small></td>
-    <td class="r">${fmt(monthly(s, db.base, rates))}</td>
-    <td>${s.active ? dt(due(s)).toLocaleDateString('de-CH') : '<span class="mut">pausiert</span>'}</td>
+    <td class="r">${fmt(mon(s))}</td>
+    <td>${s.active ? day(due(s)) : '<span class="mut">pausiert</span>'}</td>
     <td class="r"><button class="ico" data-show="${s.id}" title="Rechnungen anzeigen">🧾 ${count(s.id)}</button></td>
     <td class="r"><button class="ico" data-upl="${s.id}" title="Rechnung hochladen" aria-label="Rechnung hochladen">⬆️</button><button class="ico" data-edit="${s.id}" title="Bearbeiten" aria-label="Bearbeiten">✏️</button><button class="ico" data-del="${s.id}" title="Löschen" aria-label="Löschen">🗑️</button></td>
   </tr>`).join('') || `<tr><td colspan="7" class="empty">${db.subs.length ? 'Keine Treffer.' : 'Noch keine Abos – leg mit „+ Abo“ los.'}</td></tr>`;
@@ -302,12 +425,12 @@ function renderInv() {
   const list = searchInvoices(db.invoices, db.subs, $('#invQ').value, hits)
     .filter((i) => (!sub || i.subId === sub) && (!year || i.date.startsWith(year)))
     .sort((a, b) => b.date.localeCompare(a.date));
-  const sum = list.reduce((a, i) => a + toBase(i.amount || 0, i.cur, db.base, rates), 0);
-  $('#invSum').textContent = `${list.length} von ${db.invoices.length} Rechnungen · Summe ${fmt(sum)}`;
+  const total = list.reduce((a, i) => a + toBase(i.amount || 0, i.cur, db.base, rates), 0);
+  $('#invSum').textContent = `${list.length} von ${db.invoices.length} Rechnungen · Summe ${fmt(total)}`;
   $('#invRows').innerHTML = list.map((i) => {
     const s = subById(i.subId);
     return `<tr>
-      <td>${dt(i.date).toLocaleDateString('de-CH')}</td>
+      <td>${day(i.date)}</td>
       <td><a href="${guest ? '#' : esc(i.link)}" ${guest ? `data-open="${esc(i.fileId)}"` : 'target="_blank" rel="noopener"'}>📄 ${esc(i.name)}</a></td>
       <td>${esc(s?.name ?? '–')}<br><small class="mut">${esc(CATEGORIES[s?.cat] ?? '')}</small></td>
       <td class="r">${i.amount ? fmt(i.amount, i.cur) : '–'}</td>
@@ -325,10 +448,10 @@ function tab(name) {
 
 function editSub(s = { cat: 'media', interval: 'month', cur: db.base, next: today(), active: true }) {
   const dlg = $('#subDlg'), f = dlg.querySelector('form');
-  $('#subTitle').textContent = s.id ? 'Abo bearbeiten' : 'Neues Abo';
+  $('#subTitle').textContent = s.id ? 'Bearbeiten' : 'Neues Abo / Sparplan';
   f.cat.innerHTML = opts(CATEGORIES, s.cat);
   f.interval.innerHTML = opts(INTERVALS, s.interval);
-  f.cur.innerHTML = CURRENCIES.map((c) => `<option${c === s.cur ? ' selected' : ''}>${c}</option>`).join('');
+  f.cur.innerHTML = curOpts(s.cur);
   f.name.value = s.name ?? ''; f.amount.value = s.amount ?? ''; f.next.value = s.next; f.notes.value = s.notes ?? ''; f.active.value = s.active ? '1' : '';
   dlg.onclose = () => {
     if (dlg.returnValue !== 'ok') return;
@@ -371,6 +494,7 @@ async function delInv(inv) {
 }
 
 document.addEventListener('click', async (e) => {
+  if (!e.target.closest('#menu')) $('#menu').open = false;
   const b = e.target.closest('button,[data-open]'); if (!b) return;
   const d = b.dataset;
   try {
@@ -378,28 +502,37 @@ document.addEventListener('click', async (e) => {
       e.preventDefault();
       const blob = await idb('readonly', (st) => st.get(d.open));
       blob ? window.open(URL.createObjectURL(blob), '_blank') : toast('Datei nicht mehr im Browser vorhanden');
-    } else if (d.tab) tab(d.tab);
+    } else if (d.google) { $('#menu').open = false; await guestToGoogle(); }
+    else if (d.tab) tab(d.tab);
     else if (d.edit) editSub(subById(d.edit));
     else if (d.upl) uploadInv(d.upl);
     else if (d.show) { $('#invSub').innerHTML = `<option value="${d.show}"></option>`; $('#invQ').value = ''; hits.clear(); tab('inv'); renderInv(); }
     else if (d.del) {
       const s = subById(d.del), inv = db.invoices.filter((i) => i.subId === s.id);
-      if (!confirm(`„${s.name}“ löschen?${inv.length ? `\nAuch ${inv.length} Rechnung(en) werden aus Google Drive gelöscht.` : ''}`)) return;
+      if (!confirm(`„${s.name}“ löschen?${inv.length ? `\nAuch ${inv.length} Rechnung(en) werden gelöscht.` : ''}`)) return;
       for (const i of inv) await delInv(i);
       db.subs = db.subs.filter((x) => x !== s); save();
     } else if (d.delinv) {
       const inv = db.invoices.find((i) => i.id === d.delinv);
-      if (confirm(`Rechnung „${inv.name}“ löschen (auch aus Google Drive)?`)) { await delInv(inv); save(); }
+      if (confirm(`Rechnung „${inv.name}“ löschen?`)) { await delInv(inv); save(); }
     }
   } catch (err) { toast('Fehler: ' + err.message); }
 });
 
-$('#loginBtn').onclick = start;
+$('#loginBtn').onclick = () => start();
+$('#guestBtn').onclick = () => start(true);
+$('#wipe').onclick = () => wipe().catch((e) => toast('Fehler: ' + e.message));
 $('#addSub').onclick = () => editSub();
 $('#addInv').onclick = () => uploadInv();
 $('#subQ').oninput = $('#subCat').onchange = renderSubs;
 $('#invSub').onchange = $('#invYear').onchange = renderInv;
 $('#base').onchange = async (e) => { db.base = e.target.value; await loadRates(); save(); };
+$('#theme').value = document.documentElement.dataset.theme || '';
+$('#theme').onchange = (e) => {
+  const t = e.target.value;
+  t ? (document.documentElement.dataset.theme = t) : delete document.documentElement.dataset.theme;
+  try { t ? localStorage.setItem('theme', t) : localStorage.removeItem('theme'); } catch {}
+};
 
 // Interactive search: local metadata instantly, PDF/image text via Drive full-text index (debounced)
 let deb;
@@ -418,13 +551,12 @@ $('#invQ').oninput = (e) => {
 
 $('#csv').onclick = () => {
   const head = ['Name', 'Kategorie', 'Betrag', 'Währung', 'Intervall', `Monatlich (${db.base})`, 'Nächste Zahlung', 'Aktiv', 'Notiz'];
-  const rows = db.subs.map((s) => [s.name, CATEGORIES[s.cat], s.amount, s.cur, INTERVALS[s.interval][0], monthly(s, db.base, rates).toFixed(2), due(s), s.active ? 'ja' : 'nein', s.notes]);
+  const rows = db.subs.map((s) => [s.name, CATEGORIES[s.cat], s.amount, s.cur, INTERVALS[s.interval][0], mon(s).toFixed(2), due(s), s.active ? 'ja' : 'nein', s.notes]);
   const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })), download: `abos-${today()}.csv` });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })), download: `spendly-${today()}.csv` });
   a.click(); URL.revokeObjectURL(a.href);
 };
 
-$('#guestBtn').onclick = () => start(true);
 if (!CLIENT_ID) { $('#setup').hidden = false; $('#loginBtn').disabled = true; }
 if (localStorage.getItem('spendly-guest')) start(true);
 else if (CLIENT_ID && token && token.exp > Date.now()) start();
