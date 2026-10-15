@@ -12,7 +12,22 @@ export const CATEGORIES = {
   finance: '🏦 Finanzen & Mitgliedschaften', // Kontogebühren, Kreditkarte, Spenden, Verbände
   invest: '📈 Sparen & Investieren',   // ETF-/Aktien-Sparpläne, Säule 3a – zählt nicht als Kosten
   other: '📦 Sonstiges',
+  salary: '💼 Lohn & Gehalt',
+  sidejob: '🛠️ Nebenerwerb',          // Freelance, Nebenjob, Verkäufe
+  capital: '💹 Dividenden & Zinsen',
+  refund: '↩️ Sonstige Einnahmen',     // Rückerstattungen, Alimente, Kindergeld
 };
+
+// How categories are presented (dialog optgroups) and counted
+export const GROUPS = {
+  'Abos & Verträge': ['media', 'software', 'telecom', 'health', 'education'],
+  'Rechnungen & Fixkosten': ['home', 'insurance', 'mobility', 'finance', 'other'],
+  'Sparen & Investieren': ['invest'],
+  Einnahmen: ['salary', 'sidejob', 'capital', 'refund'],
+};
+export const kind = (s) => (s.cat === 'invest' ? 'invest' : GROUPS.Einnahmen.includes(s.cat) ? 'income' : 'cost');
+// active and not past its optional end date
+export const isLive = (s, today) => s.active && (!s.end || s.end >= today);
 
 export const INTERVALS = {
   week: ['Wöchentlich', 52 / 12],
@@ -67,19 +82,19 @@ export function searchInvoices(invoices, subs, q, hits = new Set()) {
   });
 }
 
-export const isInvest = (s) => s.cat === 'invest';
-
-// Payments falling into each of the next n calendar months (starting with today's month), split into costs / investments
+// Payments in each of the next n calendar months (starting with today's month): totals per kind + the single payments
 export function forecast(subs, base, rates, today, n = 12) {
   const [y, m] = today.split('-').map(Number);
-  const months = Array.from({ length: n }, (_, i) => ({ key: iso(new Date(Date.UTC(y, m - 1 + i, 1))).slice(0, 7), cost: 0, invest: 0 }));
-  const end = iso(new Date(Date.UTC(y, m - 1 + n, 1)));
+  const months = Array.from({ length: n }, (_, i) => ({ key: iso(new Date(Date.UTC(y, m - 1 + i, 1))).slice(0, 7), cost: 0, invest: 0, income: 0, items: [] }));
+  const stop = iso(new Date(Date.UTC(y, m - 1 + n, 1)));
   for (const s of subs) {
-    if (!s.active || !s.next) continue;
-    const v = toBase(s.amount, s.cur, base, rates);
-    for (let k = 0, d = s.next; d < end; d = addInterval(s.next, s.interval, ++k)) {
+    if (!isLive(s, today) || !s.next) continue;
+    const value = toBase(s.amount, s.cur, base, rates), k_ = kind(s);
+    for (let k = 0, d = s.next; d < stop && (!s.end || d <= s.end); d = addInterval(s.next, s.interval, ++k)) {
       const b = months.find((x) => d.startsWith(x.key));
-      if (b) b[isInvest(s) ? 'invest' : 'cost'] += v;
+      if (!b) continue;
+      b[k_] += value;
+      b.items.push({ name: s.name, date: d, amount: s.amount, cur: s.cur, value, kind: k_ });
     }
   }
   return months;

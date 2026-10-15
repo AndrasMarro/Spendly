@@ -29,13 +29,15 @@
   <rect x="596" y="40" width="332" height="270" rx="14" fill="#fff" stroke="#e4e7ec" stroke-width="1.5"/>
   <text x="620" y="76" font-size="18" font-weight="700" fill="#1b1f24">Dein Google Drive</text>
   <use href="#folder" x="620" y="96" width="22" height="18"/><text x="650" y="110" font-size="14" font-weight="600" fill="#1b1f24">Meine Ablage</text>
-  <path d="M631 118 V176 M631 140 H648 M631 176 H648" stroke="#d0d5dd" stroke-width="1.5" fill="none"/>
-  <use href="#file" x="652" y="130" width="16" height="20"/><text x="676" y="145" font-size="13" fill="#1b1f24">spendly-data.json</text><text x="676" y="160" font-size="11" fill="#667085">Abos, Kategorien, Einstellungen</text>
-  <use href="#folder" x="650" y="168" width="22" height="18"/><text x="680" y="182" font-size="13" font-weight="600" fill="#1b1f24">Spendly Rechnungen</text>
-  <path d="M661 190 V266 M661 206 H676 M661 236 H676 M661 266 H676" stroke="#d0d5dd" stroke-width="1.5" fill="none"/>
-  <use href="#pdf" x="680" y="196" width="16" height="20"/><text x="704" y="211" font-size="13" fill="#1b1f24">swisscom-2026-10.pdf</text>
-  <use href="#pdf" x="680" y="226" width="16" height="20"/><text x="704" y="241" font-size="13" fill="#1b1f24">krankenkasse-oktober.pdf</text>
-  <use href="#pdf" x="680" y="256" width="16" height="20"/><text x="704" y="271" font-size="13" fill="#1b1f24">strom-q3-2026.pdf</text>
+  <path d="M631 118 V136 M631 136 H648" stroke="#d0d5dd" stroke-width="1.5" fill="none"/>
+  <use href="#folder" x="650" y="127" width="22" height="18"/><text x="680" y="141" font-size="14" font-weight="700" fill="#1b1f24">Spendly</text>
+  <path d="M661 149 V196 M661 166 H678 M661 196 H678" stroke="#d0d5dd" stroke-width="1.5" fill="none"/>
+  <use href="#file" x="682" y="156" width="16" height="20"/><text x="706" y="171" font-size="13" fill="#1b1f24">spendly-data.json</text><text x="840" y="171" font-size="11" fill="#667085">alle Posten</text>
+  <use href="#folder" x="680" y="187" width="22" height="18"/><text x="710" y="201" font-size="13" font-weight="600" fill="#1b1f24">Rechnungen</text>
+  <path d="M691 209 V276 M691 222 H706 M691 249 H706 M691 276 H706" stroke="#d0d5dd" stroke-width="1.5" fill="none"/>
+  <use href="#pdf" x="710" y="212" width="16" height="20"/><text x="734" y="227" font-size="13" fill="#1b1f24">swisscom-2026-10.pdf</text>
+  <use href="#pdf" x="710" y="239" width="16" height="20"/><text x="734" y="254" font-size="13" fill="#1b1f24">krankenkasse-oktober.pdf</text>
+  <use href="#pdf" x="710" y="266" width="16" height="20"/><text x="734" y="281" font-size="13" fill="#1b1f24">lohnabrechnung-okt.pdf</text>
 
   <!-- No server -->
   <rect x="32" y="336" width="896" height="56" rx="12" fill="#ecfdf5" stroke="#a7f3d0"/>

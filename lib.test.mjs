@@ -1,6 +1,6 @@
 // node lib.test.mjs
 import assert from 'node:assert/strict';
-import { addInterval, nextDue, toBase, monthly, searchInvoices, forecast } from './lib.mjs';
+import { addInterval, nextDue, toBase, monthly, searchInvoices, forecast, kind, isLive } from './lib.mjs';
 
 assert.equal(addInterval('2026-01-31', 'month', 1), '2026-02-28');
 assert.equal(addInterval('2026-01-31', 'month', 2), '2026-03-31');
@@ -41,5 +41,16 @@ assert.equal(fc.length, 12);
 assert.deepEqual(fc.slice(0, 3).map((m) => [m.key, m.cost, m.invest]), [['2026-10', 10, 0], ['2026-11', 10, 300], ['2026-12', 10, 0]]);
 assert.equal(fc[4].key, '2027-02'); assert.equal(fc[4].invest, 300);
 assert.equal(fc[11].key, '2027-09');
+assert.deepEqual(fc[1].items.map((i) => [i.date, i.kind]), [['2026-11-30', 'cost'], ['2026-11-15', 'invest']]);
+
+assert.equal(kind({ cat: 'salary' }), 'income'); assert.equal(kind({ cat: 'invest' }), 'invest'); assert.equal(kind({ cat: 'home' }), 'cost');
+assert.equal(isLive({ active: true, end: '2026-10-14' }, '2026-10-15'), false);
+// income counted, end date stops the series
+const fc2 = forecast([
+  { active: true, amount: 5000, cur: 'CHF', interval: 'month', next: '2026-10-25', cat: 'salary' },
+  { active: true, amount: 200, cur: 'EUR', interval: 'month', next: '2026-10-20', cat: 'mobility', end: '2026-12-20' },
+], 'CHF', { EUR: 2 }, '2026-10-15');
+assert.deepEqual(fc2.slice(0, 4).map((m) => [m.income, m.cost]), [[5000, 100], [5000, 100], [5000, 100], [5000, 0]]);
+assert.deepEqual(fc2[0].items.find((i) => i.cur === 'EUR'), { name: undefined, date: '2026-10-20', amount: 200, cur: 'EUR', value: 100, kind: 'cost' });
 
 console.log('ok');

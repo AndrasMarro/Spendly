@@ -5,47 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spendly</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
-<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch {}</script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mut:#667085; --line:#e4e7ec; --acc:#4f46e5; --acc2:#eef2ff; --bad:#dc2626; --s1:#2a78d6; --s2:#eb6834; color-scheme: light; }
-  :root[data-theme=dark] { --bg:#0b0c0f; --card:#15171c; --fg:#e8eaee; --mut:#9aa3b2; --line:#262a33; --acc:#818cf8; --acc2:#1e2140; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme]) { --bg:#0b0c0f; --card:#15171c; --fg:#e8eaee; --mut:#9aa3b2; --line:#262a33; --acc:#818cf8; --acc2:#1e2140; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; } }
-  :root[data-theme=dim] { --bg:#22272e; --card:#2d333b; --fg:#e1e4e8; --mut:#a3acb9; --line:#3d444d; --acc:#8b93f8; --acc2:#373c5e; --bad:#f87171; --s1:#3987e5; --s2:#d95926; color-scheme: dark; }
+  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mut:#667085; --line:#e4e7ec; --acc:#4f46e5; --acc2:#eef2ff; --bad:#dc2626; --good:#15803d; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; color-scheme: light; }
+  :root[data-theme=dark] { --bg:#0b0c0f; --card:#15171c; --fg:#e8eaee; --mut:#9aa3b2; --line:#262a33; --acc:#818cf8; --acc2:#1e2140; --bad:#f87171; --good:#4ade80; --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme: dark; }
+  :root[data-theme=dim] { --bg:#22272e; --card:#2d333b; --fg:#e1e4e8; --mut:#a3acb9; --line:#3d444d; --acc:#8b93f8; --acc2:#373c5e; --bad:#f87171; --good:#4ade80; --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin:0; font:15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--fg); }
-  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
-  header h1 { font-size:18px; margin:0 12px 0 0; }
-  nav { display:flex; gap:4px; flex:1; }
-  nav button { background:none; border:0; padding:8px 12px; border-radius:8px; color:var(--mut); font-weight:600; }
+  header { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:18px; margin:0 8px 0 0; }
+  nav { display:flex; gap:2px; flex:1; overflow-x:auto; }
+  nav button { background:none; border:0; padding:8px 10px; border-radius:8px; color:var(--mut); font-weight:600; white-space:nowrap; }
   nav button.on { background:var(--acc2); color:var(--acc); }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; padding:2px; gap:2px; }
+  .seg button { border:0; background:none; padding:5px; border-radius:7px; color:var(--mut); display:grid; }
+  .seg button[aria-pressed=true] { background:var(--acc2); color:var(--acc); }
+  .seg svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
   main { max-width:1100px; margin:0 auto; padding:16px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
-  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
-  .kpi small { color:var(--mut); display:block; } .kpi b { font-size:24px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { margin:0; } .kpi small { color:var(--mut); display:block; } .kpi b { font-size:22px; } .kpi b span { white-space:nowrap; } .kpi b small { font-size:13px; font-weight:400; margin-top:2px; } .pos { color:var(--good); } .neg { color:var(--bad); }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:760px){ .grid2 { grid-template-columns:1fr; } }
   h2 { font-size:16px; margin:0 0 12px; }
   .bar { display:grid; grid-template-columns:minmax(0,180px) 1fr auto; gap:8px; align-items:center; margin:6px 0; font-size:14px; }
-  @media (max-width:500px){ .bar { grid-template-columns:minmax(0,130px) 1fr auto; } }
+  @media (max-width:500px){ .bar { grid-template-columns:minmax(0,120px) 1fr auto; } }
   .bar span:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar i { display:block; height:10px; border-radius:0 4px 4px 0; background:var(--s1); min-width:2px; }
-  .legend { display:flex; gap:16px; font-size:13px; color:var(--mut); margin:-4px 0 8px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; }
-  .chart { width:100%; height:auto; display:block; } .chart text { font-size:11px; fill:var(--mut); } .chart .grid { stroke:var(--line); }
-  .chart .hit { fill:transparent; } .chart g:hover .hit { fill:var(--acc2); }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--mut); margin:-4px 0 8px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; }
+  .chart { width:100%; height:auto; display:block; touch-action:pan-y; } .chart text { font-size:11px; fill:var(--mut); } .chart .grid { stroke:var(--line); }
+  .chart .hit { fill:transparent; } .chart g.on .hit { fill:var(--acc2); }
+  .tip { position:fixed; z-index:30; pointer-events:none; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13px; width:290px; box-shadow:0 8px 24px #0004; }
+  .tip hr { border:0; border-top:1px solid var(--line); margin:6px 0; } .tl { display:flex; justify-content:space-between; gap:10px; } .tl span:last-child { white-space:nowrap; } .tip small { color:var(--mut); }
   table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  th { color:var(--mut); font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  th { color:var(--mut); font-size:12px; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
+  th[data-sort] { cursor:pointer; user-select:none; } th[data-sort]:hover { color:var(--fg); }
+  th[aria-sort=ascending]::after { content:' ▲'; } th[aria-sort=descending]::after { content:' ▼'; }
   tr.grp td { background:var(--acc2); font-weight:600; } tr.tot td { font-weight:700; border-top:2px solid var(--line); }
+  tr.sub > td { background:var(--bg); padding:8px 12px; }
+  .invline { display:grid; grid-template-columns:90px 1fr auto auto; gap:8px; align-items:center; padding:4px 0; }
+  .prev { margin:6px 0 10px; } .prev iframe, .prev img { width:100%; height:min(70vh,560px); border:1px solid var(--line); border-radius:8px; background:#fff; object-fit:contain; }
   .r { text-align:right; white-space:nowrap; } .mut { color:var(--mut); } .off { opacity:.45; }
   .scroll { overflow-x:auto; }
   .tools { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; } .tools input[type=search] { flex:1; min-width:180px; }
   input, select, textarea, button { font:inherit; color:inherit; }
   input, select, textarea { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%; }
   .tools select, .tools input { width:auto; }
-  button { cursor:pointer; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:8px 12px; }
+  button, .btn { cursor:pointer; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:8px 12px; text-align:center; }
   button.pri { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
   button.bad { color:var(--bad); border-color:var(--bad); }
   button.ico { padding:4px 8px; border:0; background:none; }
-  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, th:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
   dialog { border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--fg); width:min(520px,calc(100vw - 32px)); padding:20px; }
   dialog::backdrop { background:#0007; }
   dialog form { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; } dialog label, .menu label { display:grid; gap:4px; font-size:13px; color:var(--mut); }
@@ -53,9 +63,10 @@
   .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:99px; background:var(--acc2); color:var(--acc); white-space:nowrap; }
   #login { max-width:420px; margin:12vh auto; text-align:center; }
   #menu { position:relative; } #menu summary { list-style:none; cursor:pointer; border-radius:50%; } #menu summary::-webkit-details-marker { display:none; }
-  .av { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:var(--acc); color:#fff; font-weight:700; object-fit:cover; }
-  .menu { position:absolute; right:0; top:46px; width:min(280px,calc(100vw - 32px)); display:grid; gap:10px; z-index:10; box-shadow:0 8px 24px #0004; margin:0; }
-  #toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:14px; display:none; z-index:20; }
+  .av { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:var(--acc); color:#fff; font-weight:700; object-fit:cover; }
+  .menu { position:absolute; right:0; top:44px; width:min(280px,calc(100vw - 32px)); display:grid; gap:8px; z-index:10; box-shadow:0 8px 24px #0004; margin:0; }
+  .menu hr { border:0; border-top:1px solid var(--line); margin:2px 0; width:100%; }
+  #toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:14px; display:none; z-index:40; }
   .empty { color:var(--mut); text-align:center; padding:24px; }
   [hidden] { display:none !important; }
 </style>
@@ -65,15 +76,25 @@
   <h1>💸 Spendly</h1>
   <nav>
     <button data-tab="dash" class="on">Übersicht</button>
-    <button data-tab="subs">Abos</button>
+    <button data-tab="out">Ausgaben</button>
+    <button data-tab="in">Einnahmen</button>
     <button data-tab="inv">Rechnungen</button>
   </nav>
+  <div class="seg" role="group" aria-label="Design">
+    <button data-theme-set="light" title="Hell" aria-label="Hell"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    <button data-theme-set="dim" title="Gedimmt" aria-label="Gedimmt"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+    <button data-theme-set="dark" title="Dunkel" aria-label="Dunkel"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+  </div>
   <details id="menu">
     <summary id="avatar" aria-label="Menü"></summary>
     <div class="menu card">
       <div id="who"></div>
-      <label>Design<select id="theme"><option value="">Automatisch</option><option value="light">Hell</option><option value="dim">Gedimmt</option><option value="dark">Dunkel</option></select></label>
       <label>Basiswährung<select id="base"></select></label>
+      <hr>
+      <button id="csv">Tabelle exportieren (CSV)</button>
+      <button id="backup">Backup herunterladen (JSON)</button>
+      <label class="btn">Backup wiederherstellen<input type="file" id="restore" accept="application/json,.json" hidden></label>
+      <hr>
       <button class="pri" data-google="1" hidden>Mit Google anmelden</button>
       <button id="logout"></button>
       <button id="wipe" class="bad">Alle Daten löschen</button>
@@ -83,7 +104,7 @@
 
 <section id="login" class="card">
   <h1>💸 Spendly</h1>
-  <p class="mut">Abos, Kosten und Rechnungen an einem Ort.<br>Deine Daten liegen in <b>deinem eigenen Google Drive</b>.</p>
+  <p class="mut">Einnahmen, Ausgaben, Abos und Rechnungen an einem Ort.<br>Deine Daten liegen in <b>deinem eigenen Google Drive</b> im Ordner „Spendly“.</p>
   <button class="pri" id="loginBtn">Mit Google anmelden</button>
   <button id="guestBtn">Als Gast fortfahren</button>
   <p class="mut"><small>Gast: Daten bleiben nur in diesem Browser und sind weg, wenn du Browserdaten/Cache löschst.</small></p>
@@ -93,37 +114,55 @@
 <main id="app" hidden>
   <p id="guestWarn" class="card" hidden>⚠️ <b>Gastmodus:</b> Deine Daten liegen nur in diesem Browser. Browserdaten löschen = alles weg.
     <button class="pri" data-google="1">Mit Google anmelden</button></p>
+
   <section data-view="dash">
+    <div class="tools">
+      <input type="search" id="dq" placeholder="Übersicht filtern: Name, Notiz, Kategorie…" aria-label="Übersicht filtern">
+      <select id="dcat" aria-label="Art oder Kategorie"></select>
+    </div>
     <div class="kpis" id="kpis"></div>
     <div class="card">
-      <h2>Zahlungen der nächsten 12 Monate <small class="mut" id="fcCur"></small></h2>
-      <div class="legend"><span><i style="background:var(--s1)"></i>Fixkosten</span><span><i style="background:var(--s2)"></i>Sparen & Investieren</span></div>
+      <h2>Die nächsten 12 Monate <small class="mut" id="fcCur"></small></h2>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Fixkosten</span><span><i style="background:var(--s2)"></i>Sparen & Investieren</span><span><i style="background:var(--s3);height:3px;vertical-align:middle"></i>Einnahmen</span><span>· Balken antippen/hovern für Details</span></div>
       <div id="forecast"></div>
     </div>
     <div class="grid2">
       <div class="card"><h2>Fixkosten pro Kategorie (monatlich)</h2><div id="cats"></div></div>
-      <div class="card"><h2>Nächste Zahlungen (30 Tage)</h2><div id="upcoming"></div></div>
+      <div class="card"><h2>Nächste 30 Tage</h2><div id="upcoming"></div></div>
     </div>
     <div class="card">
       <h2>Alle Posten <small class="mut" id="allCount"></small></h2>
-      <div class="scroll"><table>
-        <thead><tr><th>Name</th><th>Intervall</th><th class="r">Betrag</th><th class="r">pro Monat</th><th class="r">pro Jahr</th><th>Nächste</th></tr></thead>
+      <div class="scroll"><table data-tbl="all">
+        <thead><tr><th data-sort="name">Name</th><th data-sort="interval">Intervall</th><th class="r" data-sort="amount">Betrag</th><th class="r" data-sort="monthly">pro Monat</th><th class="r" data-sort="monthly">pro Jahr</th><th data-sort="next">Nächste</th></tr></thead>
         <tbody id="allRows"></tbody>
       </table></div>
     </div>
   </section>
 
-  <section data-view="subs" hidden>
+  <section data-view="out" hidden>
     <div class="card">
       <div class="tools">
-        <input type="search" id="subQ" placeholder="Abos durchsuchen…" aria-label="Abos durchsuchen">
-        <select id="subCat" aria-label="Kategorie"></select>
-        <button id="csv">CSV-Export</button>
-        <button class="pri" id="addSub">+ Abo / Sparplan</button>
+        <input type="search" id="q-out" placeholder="Ausgaben durchsuchen…" aria-label="Ausgaben durchsuchen">
+        <select id="cat-out" aria-label="Kategorie"></select>
+        <button class="pri" data-add="out">+ Ausgabe / Sparplan</button>
       </div>
-      <div class="scroll"><table>
-        <thead><tr><th>Name</th><th>Kategorie</th><th class="r">Betrag</th><th class="r">pro Monat</th><th>Nächste</th><th class="r">Rechnungen</th><th></th></tr></thead>
-        <tbody id="subRows"></tbody>
+      <div class="scroll"><table data-tbl="out">
+        <thead><tr><th data-sort="name">Name</th><th data-sort="cat">Kategorie</th><th class="r" data-sort="amount">Betrag</th><th class="r" data-sort="monthly">pro Monat</th><th data-sort="next">Nächste</th><th class="r" data-sort="docs">Rechnungen</th><th></th></tr></thead>
+        <tbody id="rows-out"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section data-view="in" hidden>
+    <div class="card">
+      <div class="tools">
+        <input type="search" id="q-in" placeholder="Einnahmen durchsuchen…" aria-label="Einnahmen durchsuchen">
+        <select id="cat-in" aria-label="Kategorie"></select>
+        <button class="pri" data-add="in">+ Einnahme</button>
+      </div>
+      <div class="scroll"><table data-tbl="in">
+        <thead><tr><th data-sort="name">Name</th><th data-sort="cat">Kategorie</th><th class="r" data-sort="amount">Betrag</th><th class="r" data-sort="monthly">pro Monat</th><th data-sort="next">Nächste</th><th class="r" data-sort="docs">Belege</th><th></th></tr></thead>
+        <tbody id="rows-in"></tbody>
       </table></div>
     </div>
   </section>
@@ -131,14 +170,14 @@
   <section data-view="inv" hidden>
     <div class="card">
       <div class="tools">
-        <input type="search" id="invQ" placeholder="Suche: Name, Abo, Kategorie, Datum, Betrag, Notiz, PDF-Inhalt…" aria-label="Rechnungen durchsuchen">
-        <select id="invSub" aria-label="Abo"></select>
+        <input type="search" id="invQ" placeholder="Suche: Name, Posten, Kategorie, Datum, Betrag, Notiz, PDF-Inhalt…" aria-label="Rechnungen durchsuchen">
+        <select id="invSub" aria-label="Posten"></select>
         <select id="invYear" aria-label="Jahr"></select>
         <button class="pri" id="addInv">+ Rechnung</button>
       </div>
       <p class="mut" id="invSum"></p>
-      <div class="scroll"><table>
-        <thead><tr><th>Datum</th><th>Datei</th><th>Abo</th><th class="r">Betrag</th><th>Notiz</th><th></th></tr></thead>
+      <div class="scroll"><table data-tbl="inv">
+        <thead><tr><th data-sort="date">Datum</th><th data-sort="file">Datei</th><th data-sort="sub">Posten</th><th class="r" data-sort="iamount">Betrag</th><th>Notiz</th><th></th></tr></thead>
         <tbody id="invRows"></tbody>
       </table></div>
     </div>
@@ -146,37 +185,40 @@
 </main>
 
 <dialog id="subDlg"><form method="dialog">
-  <h2 class="full" id="subTitle">Abo</h2>
-  <label class="full">Name<input name="name" required maxlength="80" placeholder="z.B. Netflix oder ETF-Sparplan VWRL"></label>
+  <h2 class="full" id="subTitle"></h2>
+  <label class="full">Name<input name="name" required maxlength="80"></label>
   <label>Kategorie<select name="cat"></select></label>
   <label>Intervall<select name="interval"></select></label>
   <label>Betrag<input name="amount" type="number" step="0.01" min="0" required></label>
   <label>Währung<select name="cur"></select></label>
-  <label>Erste / nächste Zahlung<input name="next" type="date" required></label>
-  <label>Status<select name="active"><option value="1">Aktiv</option><option value="">Pausiert / gekündigt</option></select></label>
+  <label>Nächstes Datum<input name="next" type="date" required></label>
+  <label>Endet am <small>(optional)</small><input name="end" type="date"></label>
+  <label class="full">Status<select name="active"><option value="1">Aktiv</option><option value="">Pausiert / gekündigt</option></select></label>
   <label class="full">Notiz<textarea name="notes" rows="2" maxlength="500" placeholder="z.B. ISIN, Vertragsnummer, Kündigungsfrist"></textarea></label>
   <div class="acts"><button value="cancel" formnovalidate>Abbrechen</button><button class="pri" value="ok">Speichern</button></div>
 </form></dialog>
 
 <dialog id="invDlg"><form method="dialog">
-  <h2 class="full">Rechnung hochladen</h2>
-  <label class="full">Abo<select name="subId" required></select></label>
+  <h2 class="full">Rechnung / Beleg hochladen</h2>
+  <label class="full">Posten<select name="subId" required></select></label>
   <label class="full">Datei(en) (PDF / Bild)<input name="file" type="file" accept="application/pdf,image/*" multiple required></label>
-  <label>Rechnungsdatum<input name="date" type="date" required></label>
+  <label>Datum<input name="date" type="date" required></label>
   <label>Betrag<input name="amount" type="number" step="0.01" min="0"></label>
   <label class="full">Notiz<input name="notes" maxlength="300"></label>
   <div class="acts"><button value="cancel" formnovalidate>Abbrechen</button><button class="pri" value="ok">Hochladen</button></div>
 </form></dialog>
 
+<div id="tip" class="tip" hidden></div>
 <div id="toast" role="status"></div>
 
 <script type="module">
-import { CATEGORIES, INTERVALS, CURRENCIES, nextDue, toBase, monthly, searchInvoices, isInvest, forecast } from './lib.mjs';
+import { CATEGORIES, GROUPS, INTERVALS, CURRENCIES, nextDue, toBase, monthly, searchInvoices, kind, isLive, forecast } from './lib.mjs';
 
 // Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web). See README.
 const CLIENT_ID = '738986094822-dv3bhqvs13agos48ipu6oaesmsg1ebo9.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/drive.file openid email profile';
-const DATA_FILE = 'spendly-data.json', FOLDER = 'Spendly Rechnungen';
+const ROOT = 'Spendly', DATA_FILE = 'spendly-data.json', INV_FOLDER = 'Rechnungen', OLD_INV_FOLDER = 'Spendly Rechnungen';
+const FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DRIVE = 'https://www.googleapis.com/drive/v3/files', UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
 const FX = 'https://api.frankfurter.dev/v1';
 
@@ -184,13 +226,18 @@ const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const dt = (d) => new Date(d + 'T00:00');
 const today = () => new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
+const plusDays = (n) => new Date(Date.now() + n * 864e5).toLocaleDateString('sv');
 const uid = () => crypto.randomUUID();
 const opts = (o, sel) => Object.entries(o).map(([k, v]) => `<option value="${esc(k)}"${k === sel ? ' selected' : ''}>${esc(Array.isArray(v) ? v[0] : v)}</option>`).join('');
 const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => (t.style.display = 'none'), 3500); };
 
-let db = { base: 'CHF', subs: [], invoices: [] }, dataId, folderId, rates = {}, hits = new Set(), guest = false;
+let db = { base: 'CHF', subs: [], invoices: [] }, dataId, rootId, folderId, rates = {}, hits = new Set(), guest = false;
 let currencies = Object.fromEntries(CURRENCIES.map((c) => [c, c])); // replaced by the full ECB list from frankfurter
+const sort = {}, expanded = new Set(), shown = new Set(), blobUrls = {};
 const curOpts = (sel) => opts(Object.fromEntries(Object.entries({ [sel]: sel, ...currencies }).map(([k, v]) => [k, k === v ? k : `${k} – ${v}`])), sel);
+// <optgroup>s of the category groups whose kind is in `kinds`
+const catOpts = (kinds, sel) => Object.entries(GROUPS).filter(([, cs]) => kinds.includes(kind({ cat: cs[0] })))
+  .map(([g, cs]) => `<optgroup label="${esc(g)}">${cs.map((c) => `<option value="${c}"${c === sel ? ' selected' : ''}>${esc(CATEGORIES[c])}</option>`).join('')}</optgroup>`).join('');
 const fmt = (n, cur = db.base) => new Intl.NumberFormat('de-CH', { style: 'currency', currency: cur }).format(n || 0);
 const subById = (id) => db.subs.find((s) => s.id === id);
 
@@ -219,6 +266,7 @@ async function api(url, opt = {}, retry = true) {
   if (!r.ok) throw new Error(`Google API ${r.status}: ${(await r.text()).slice(0, 200)}`);
   return r.status === 204 ? null : r.headers.get('content-type')?.includes('json') ? r.json() : r.text();
 }
+const json = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 // Guest mode: data in localStorage, invoice files in IndexedDB (localStorage ~5 MB is too small for PDFs)
 const idb = (mode, fn) => new Promise((res, rej) => {
@@ -228,23 +276,31 @@ const idb = (mode, fn) => new Promise((res, rej) => {
   o.onsuccess = () => { const r = fn(o.result.transaction('files', mode).objectStore('files')); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); };
 });
 
-const find = async (q) => (await api(`${DRIVE}?q=${encodeURIComponent(q + ' and trashed=false')}&fields=files(id,webViewLink)&pageSize=1000`)).files;
+const find = async (q) => (await api(`${DRIVE}?q=${encodeURIComponent(q + ' and trashed=false')}&fields=files(id,webViewLink,parents)&pageSize=1000`)).files;
 const multipart = (meta, blob, fields = 'id') => {
   const fd = new FormData();
   fd.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
   fd.append('file', blob);
   return api(`${UPLOAD}?uploadType=multipart&fields=${fields}`, { method: 'POST', body: fd });
 };
-const newFolder = async () => (await api(DRIVE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).id;
+const mkdir = async (name, parent) => (await api(DRIVE, json('POST', { name, mimeType: FOLDER_MIME, ...(parent && { parents: [parent] }) }))).id;
+const move = (f, parent, rename) => api(`${DRIVE}/${f.id}?addParents=${parent}&removeParents=${(f.parents || []).join(',')}`, json('PATCH', rename ? { name: rename } : {}));
 
+// Drive layout: Spendly/spendly-data.json + Spendly/Rechnungen/… (older versions put both in Drive root → moved here)
 async function loadData() {
   if (guest) return (db = { base: 'CHF', subs: [], invoices: [], ...JSON.parse(localStorage.getItem('spendly') || '{}') });
   db = { base: 'CHF', subs: [], invoices: [] };
+  rootId = (await find(`name='${ROOT}' and mimeType='${FOLDER_MIME}'`))[0]?.id ?? (await mkdir(ROOT));
   const [f] = await find(`name='${DATA_FILE}' and mimeType='application/json'`);
-  if (f) { dataId = f.id; const d = await api(`${DRIVE}/${f.id}?alt=media`); db = { ...db, ...(typeof d === 'string' ? JSON.parse(d) : d) }; }
-  else dataId = (await multipart({ name: DATA_FILE, mimeType: 'application/json' }, new Blob([JSON.stringify(db)], { type: 'application/json' }))).id;
-  const [folder] = await find(`name='${FOLDER}' and mimeType='application/vnd.google-apps.folder'`);
-  folderId = folder?.id ?? (await newFolder());
+  if (f) {
+    dataId = f.id;
+    if (!f.parents?.includes(rootId)) await move(f, rootId);
+    const d = await api(`${DRIVE}/${f.id}?alt=media`); db = { ...db, ...(typeof d === 'string' ? JSON.parse(d) : d) };
+  } else dataId = (await multipart({ name: DATA_FILE, mimeType: 'application/json', parents: [rootId] }, new Blob([JSON.stringify(db)], { type: 'application/json' }))).id;
+  const [inv] = await find(`'${rootId}' in parents and name='${INV_FOLDER}' and mimeType='${FOLDER_MIME}'`);
+  const [old] = inv ? [] : await find(`name='${OLD_INV_FOLDER}' and mimeType='${FOLDER_MIME}'`);
+  if (old) await move(old, rootId, INV_FOLDER);
+  folderId = inv?.id ?? old?.id ?? (await mkdir(INV_FOLDER, rootId));
 }
 
 // ponytail: last write wins if two devices edit at the same time; add revision check (If-Match) if that ever bites
@@ -305,7 +361,7 @@ async function guestToGoogle() {
   const old = db;
   if (!(await start())) return start(true); // login failed/cancelled → stay guest
   localStorage.removeItem('spendly-guest');
-  if (!old.subs.length || !confirm(`${old.subs.length} Abo(s) und ${old.invoices.length} Rechnung(en) aus dem Gastmodus in dein Google Drive übernehmen?`)) return;
+  if (!old.subs.length || !confirm(`${old.subs.length} Posten und ${old.invoices.length} Rechnung(en) aus dem Gastmodus in dein Google Drive übernehmen?`)) return;
   toast('Übernehme Gastdaten…');
   for (const inv of old.invoices) {
     const blob = await idb('readonly', (st) => st.get(inv.fileId));
@@ -319,11 +375,11 @@ async function guestToGoogle() {
 }
 
 async function wipe() {
-  if (prompt('Alle Abos, Sparpläne und Rechnungen löschen?\nTippe LÖSCHEN zum Bestätigen.')?.trim().toUpperCase() !== 'LÖSCHEN') return;
+  if (prompt('Alle Einnahmen, Ausgaben, Sparpläne und Rechnungen löschen?\nTippe LÖSCHEN zum Bestätigen.')?.trim().toUpperCase() !== 'LÖSCHEN') return;
   if (guest) await idb('readwrite', (st) => st.clear());
   else { // trash the whole invoice folder in one call (recoverable from Drive's bin for 30 days)
-    await api(`${DRIVE}/${folderId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }) });
-    folderId = await newFolder();
+    await api(`${DRIVE}/${folderId}`, json('PATCH', { trashed: true }));
+    folderId = await mkdir(INV_FOLDER, rootId);
   }
   db = { base: db.base, subs: [], invoices: [] };
   $('#menu').open = false;
@@ -331,54 +387,91 @@ async function wipe() {
 }
 
 // ---------- Rendering ----------
-const due = (s) => nextDue(s.next, s.interval, today());
-const active = () => db.subs.filter((s) => s.active);
+const due = (s) => { const d = nextDue(s.next, s.interval, today()); return s.end && d > s.end ? '' : d; };
 const mon = (s) => monthly(s, db.base, rates);
 const sum = (list) => list.reduce((a, s) => a + mon(s), 0);
-const day = (d) => dt(d).toLocaleDateString('de-CH');
+const day = (d) => (d ? dt(d).toLocaleDateString('de-CH') : '–');
+const docCount = (id) => db.invoices.filter((i) => i.subId === id).length;
+
+// Sortable tables: click a <th data-sort> → asc, again → desc. Getters shared by all tables.
+const GET = {
+  name: (s) => s.name.toLowerCase(), cat: (s) => CATEGORIES[s.cat], interval: (s) => -INTERVALS[s.interval][1],
+  amount: (s) => toBase(s.amount, s.cur, db.base, rates), monthly: mon, next: (s) => due(s) || '9999', docs: (s) => docCount(s.id),
+  date: (i) => i.date, file: (i) => i.name.toLowerCase(), sub: (i) => subById(i.subId)?.name.toLowerCase() ?? '', iamount: (i) => toBase(i.amount || 0, i.cur, db.base, rates),
+};
+const sorted = (tbl, rows) => {
+  const s = sort[tbl]; if (!s) return rows;
+  const g = GET[s.k];
+  return [...rows].sort((a, b) => { const x = g(a), y = g(b); return (typeof x === 'string' ? x.localeCompare(y, 'de') : x - y) * s.dir; });
+};
 
 function render() {
   $('#base').innerHTML = curOpts(db.base);
-  const act = active(), costs = act.filter((s) => !isInvest(s)), inv = act.filter(isInvest);
-  const nxt = act.map((s) => ({ s, d: due(s) })).sort((a, b) => a.d.localeCompare(b.d));
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.themeSet === document.documentElement.dataset.theme));
+  renderDash(); renderList('out'); renderList('in'); renderInv();
+  document.querySelectorAll('th[data-sort]').forEach((th) => {
+    const s = sort[th.closest('table').dataset.tbl];
+    s?.k === th.dataset.sort ? th.setAttribute('aria-sort', s.dir > 0 ? 'ascending' : 'descending') : th.removeAttribute('aria-sort');
+    th.tabIndex = 0;
+  });
+}
+
+function renderDash() {
+  const f = $('#dcat').value, q = $('#dq').value.toLowerCase();
+  $('#dcat').innerHTML = `<option value="">Alles</option><option value="k:income"${f === 'k:income' ? ' selected' : ''}>Nur Einnahmen</option><option value="k:cost"${f === 'k:cost' ? ' selected' : ''}>Nur Fixkosten</option><option value="k:invest"${f === 'k:invest' ? ' selected' : ''}>Nur Sparen & Investieren</option>` + catOpts(['cost', 'invest', 'income'], f);
+  const T = today();
+  const F = db.subs.filter((s) => (!f || (f.startsWith('k:') ? kind(s) === f.slice(2) : s.cat === f)) && `${s.name} ${s.notes} ${CATEGORIES[s.cat]}`.toLowerCase().includes(q));
+  const live = F.filter((s) => isLive(s, T)), by = (k) => live.filter((s) => kind(s) === k);
+  const inc = sum(by('income')), cost = sum(by('cost')), inv = sum(by('invest')), saldo = inc - cost - inv;
+  const nxt = live.filter((s) => kind(s) !== 'income').map((s) => ({ s, d: due(s) })).filter((x) => x.d).sort((a, b) => a.d.localeCompare(b.d));
 
   $('#kpis').innerHTML = [
-    ['Fixkosten / Monat', fmt(sum(costs))], ['Fixkosten / Jahr', fmt(sum(costs) * 12)], ['Investiert / Monat', fmt(sum(inv))],
-    ['Nächste Zahlung', nxt[0] ? `${esc(nxt[0].s.name)} <small style="display:inline">${day(nxt[0].d)}</small>` : '–'],
+    ['Einnahmen / Monat', fmt(inc)], ['Fixkosten / Monat', fmt(cost)], ['Investiert / Monat', fmt(inv)],
+    ['Saldo / Monat', inc ? `<span class="${saldo >= 0 ? 'pos' : 'neg'}">${saldo >= 0 ? '▲ +' : '▼ '}${fmt(saldo)}</span><small>${saldo >= 0 ? 'Überschuss' : 'Defizit'} · Sparquote ${Math.round(((inc - cost) / inc) * 100)}%</small>` : '–<small>Erfasse Einnahmen, um den Saldo zu sehen</small>'],
+    ['Nächste Zahlung', nxt[0] ? `${esc(nxt[0].s.name)}<small>${day(nxt[0].d)} · ${fmt(nxt[0].s.amount, nxt[0].s.cur)}</small>` : '–'],
   ].map(([k, v]) => `<div class="card kpi"><small>${k}</small><b>${v}</b></div>`).join('');
 
   $('#fcCur').textContent = `(${db.base})`;
-  $('#forecast').innerHTML = act.length ? forecastChart() : '<p class="empty">Noch keine aktiven Posten.</p>';
+  $('#forecast').innerHTML = live.length ? forecastChart(F) : '<p class="empty">Keine aktiven Posten (Filter prüfen).</p>';
 
   const byCat = {};
-  costs.forEach((s) => (byCat[s.cat] = (byCat[s.cat] || 0) + mon(s)));
-  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats[0]?.[1] || 1, total = sum(costs) || 1;
-  $('#cats').innerHTML = cats.map(([c, v]) => `<div class="bar"><span>${esc(CATEGORIES[c])}</span><i style="width:${(v / max) * 100}%"></i><span class="r">${fmt(v)} <small class="mut">${Math.round((v / total) * 100)}%</small></span></div>`).join('') || '<p class="empty">Noch keine Fixkosten.</p>';
+  by('cost').forEach((s) => (byCat[s.cat] = (byCat[s.cat] || 0) + mon(s)));
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats[0]?.[1] || 1;
+  $('#cats').innerHTML = cats.map(([c, v]) => `<div class="bar"><span>${esc(CATEGORIES[c])}</span><i style="width:${(v / max) * 100}%"></i><span class="r">${fmt(v)} <small class="mut">${Math.round((v / (cost || 1)) * 100)}%</small></span></div>`).join('') || '<p class="empty">Keine Fixkosten.</p>';
 
-  const in30 = new Date(Date.now() + 30 * 864e5).toLocaleDateString('sv');
-  $('#upcoming').innerHTML = nxt.filter((x) => x.d <= in30).map(({ s, d }) =>
-    `<div class="bar"><span>${esc(s.name)}</span><span class="mut">${dt(d).toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span><span class="r">${fmt(s.amount, s.cur)}</span></div>`).join('') || '<p class="empty">Keine Zahlungen in den nächsten 30 Tagen.</p>';
+  const in30 = plusDays(30), in60 = plusDays(60);
+  const soon = live.map((s) => ({ s, d: due(s) })).filter((x) => x.d && x.d <= in30).sort((a, b) => a.d.localeCompare(b.d));
+  const ending = live.filter((s) => s.end && s.end <= in60);
+  $('#upcoming').innerHTML = (soon.map(({ s, d }) =>
+    `<div class="bar"><span>${esc(s.name)}</span><span class="mut">${dt(d).toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span><span class="r">${kind(s) === 'income' ? '+ ' : ''}${fmt(s.amount, s.cur)}</span></div>`).join('') || '<p class="empty">Nichts fällig in den nächsten 30 Tagen.</p>')
+    + ending.map((s) => `<p class="mut">⏳ <b>${esc(s.name)}</b> endet am ${day(s.end)}</p>`).join('');
 
-  renderAll(costs, inv); renderSubs(); renderInv();
+  renderAll(live);
 }
 
-// Overview table: all active items grouped by category, with subtotals and totals
-function renderAll(costs, inv) {
-  $('#allCount').textContent = `(${costs.length + inv.length} aktiv)`;
+// Overview table: live items grouped by category (in GROUPS order), sortable within groups, with totals
+function renderAll(live) {
+  $('#allCount').textContent = `(${live.length} aktiv)`;
   const row = (s) => `<tr><td>${esc(s.name)}</td><td class="mut">${INTERVALS[s.interval][0]}</td><td class="r">${fmt(s.amount, s.cur)}</td><td class="r">${fmt(mon(s))}</td><td class="r">${fmt(mon(s) * 12)}</td><td>${day(due(s))}</td></tr>`;
-  const sumRow = (label, list, cls) => `<tr class="${cls}"><td colspan="3">${label}</td><td class="r">${fmt(sum(list))}</td><td class="r">${fmt(sum(list) * 12)}</td><td></td></tr>`;
-  const groups = Object.keys(CATEGORIES).map((c) => [c, [...costs, ...inv].filter((s) => s.cat === c).sort((a, b) => mon(b) - mon(a))]).filter(([, l]) => l.length);
-  $('#allRows').innerHTML = groups.map(([c, l]) => sumRow(esc(CATEGORIES[c]), l, 'grp') + l.map(row).join('')).join('')
-    + (groups.length ? sumRow('Total Fixkosten', costs, 'tot') + (inv.length ? sumRow('Total Sparen & Investieren', inv, 'tot') : '') : '<tr><td colspan="6" class="empty">Noch keine aktiven Posten.</td></tr>');
+  const sumRow = (label, m, cls) => `<tr class="${cls}"><td colspan="3">${label}</td><td class="r">${fmt(m)}</td><td class="r">${fmt(m * 12)}</td><td></td></tr>`;
+  const order = [...GROUPS.Einnahmen, ...Object.values(GROUPS).flat().filter((c) => !GROUPS.Einnahmen.includes(c))];
+  const groups = order.map((c) => [c, live.filter((s) => s.cat === c)]).filter(([, l]) => l.length);
+  const k = (x) => sum(live.filter((s) => kind(s) === x)), saldo = k('income') - k('cost') - k('invest');
+  $('#allRows').innerHTML = groups.length
+    ? groups.map(([c, l]) => sumRow(esc(CATEGORIES[c]), sum(l), 'grp') + sorted('all', l.sort((a, b) => mon(b) - mon(a))).map(row).join('')).join('')
+      + sumRow('Total Einnahmen', k('income'), 'tot') + sumRow('Total Fixkosten', k('cost'), 'tot') + sumRow('Total Sparen & Investieren', k('invest'), 'tot')
+      + sumRow(`Saldo <small class="mut">(Einnahmen − Fixkosten − Investiert)</small>`, saldo, 'tot')
+    : '<tr><td colspan="6" class="empty">Keine aktiven Posten.</td></tr>';
 }
 
-// Stacked monthly bars (costs + investments), plain SVG. Native <title> tooltips per month column.
-function forecastChart() {
-  const data = forecast(db.subs, db.base, rates, today());
-  const W = 720, H = 240, L = 52, B = 22, T = 8, bw = (W - L) / data.length, ph = H - T - B;
-  const top = Math.max(...data.map((d) => d.cost + d.invest)) || 1, p = 10 ** Math.floor(Math.log10(top));
+// Stacked monthly bars (Fixkosten + Investiert) and an income line on the same CHF axis. Rich tooltip per month.
+let fcData = [];
+function forecastChart(list) {
+  fcData = forecast(list, db.base, rates, today());
+  const W = 720, H = 240, L = 52, B = 22, T = 10, bw = (W - L) / fcData.length, ph = H - T - B;
+  const top = Math.max(...fcData.map((d) => Math.max(d.cost + d.invest, d.income))) || 1, p = 10 ** Math.floor(Math.log10(top));
   const max = [1, 2, 2.5, 5, 10].map((m) => m * p).find((m) => m >= top);
-  const y = (v) => T + ph * (1 - v / max);
+  const y = (v) => T + ph * (1 - v / max), cx = (i) => L + i * bw + bw / 2;
   const short = new Intl.NumberFormat('de-CH', { notation: 'compact', maximumFractionDigits: 1 });
   // bar with 4px rounded top only, flat on the baseline
   const bar = (x, yt, w, h, round, fill) => {
@@ -387,56 +480,96 @@ function forecastChart() {
     return `<path fill="${fill}" d="M${x} ${yt + h}V${yt + r}Q${x} ${yt} ${x + r} ${yt}H${x + w - r}Q${x + w} ${yt} ${x + w} ${yt + r}V${yt + h}Z"/>`;
   };
   const grid = [0, 0.25, 0.5, 0.75, 1].map((f) => `<line class="grid" x1="${L}" x2="${W}" y1="${y(f * max)}" y2="${y(f * max)}"/><text x="${L - 8}" y="${y(f * max) + 4}" text-anchor="end">${short.format(f * max)}</text>`).join('');
-  const cols = data.map((d, i) => {
-    const x = L + i * bw + bw * 0.2, w = bw * 0.6, c1 = y(d.cost), i1 = y(d.cost + d.invest), gap = d.cost ? 2 : 0;
-    const m = dt(d.key + '-01'), name = m.toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
+  const cols = fcData.map((d, i) => {
+    const x = L + i * bw + bw * 0.22, w = bw * 0.56, c1 = y(d.cost), i1 = y(d.cost + d.invest), gap = d.cost ? 2 : 0, m = dt(d.key + '-01');
     const lab = m.toLocaleDateString('de-CH', { month: 'short' }) + (m.getMonth() === 0 || i === 0 ? ` ${String(m.getFullYear()).slice(2)}` : '');
-    return `<g><title>${name}: Fixkosten ${fmt(d.cost)} · Investiert ${fmt(d.invest)} · Total ${fmt(d.cost + d.invest)}</title>
-      <rect class="hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${ph}" rx="4"/>
+    return `<g data-m="${i}"><rect class="hit" x="${L + i * bw}" y="${T - 6}" width="${bw}" height="${ph + 6}" rx="4"/>
       ${bar(x, c1, w, y(0) - c1, !d.invest, 'var(--s1)')}${bar(x, i1, w, c1 - gap - i1, true, 'var(--s2)')}
-      <text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${lab}</text></g>`;
+      <text x="${cx(i)}" y="${H - 6}" text-anchor="middle">${lab}</text></g>`;
   }).join('');
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Zahlungen pro Monat, nächste 12 Monate – Details in der Tabelle unten">${grid}${cols}</svg>`;
+  const hasInc = fcData.some((d) => d.income);
+  const line = hasInc ? `<polyline fill="none" stroke="var(--s3)" stroke-width="2" points="${fcData.map((d, i) => `${cx(i)},${y(d.income)}`).join(' ')}" pointer-events="none"/>`
+    + fcData.map((d, i) => `<circle cx="${cx(i)}" cy="${y(d.income)}" r="4" fill="var(--s3)" stroke="var(--card)" stroke-width="2" pointer-events="none"/>`).join('') : '';
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Einnahmen und Ausgaben pro Monat, nächste 12 Monate – Details in der Tabelle unten">${grid}${cols}${line}</svg>`;
 }
 
-function renderSubs() {
-  const q = $('#subQ').value.toLowerCase(), cat = $('#subCat').value;
-  $('#subCat').innerHTML = opts({ '': 'Alle Kategorien', ...CATEGORIES }, cat);
-  const count = (id) => db.invoices.filter((i) => i.subId === id).length;
-  const rows = db.subs
-    .filter((s) => (!cat || s.cat === cat) && (`${s.name} ${s.notes} ${CATEGORIES[s.cat]}`.toLowerCase().includes(q)))
-    .sort((a, b) => b.active - a.active || mon(b) - mon(a));
-  $('#subRows').innerHTML = rows.map((s) => `<tr class="${s.active ? '' : 'off'}">
-    <td><b>${esc(s.name)}</b>${s.notes ? `<br><small class="mut">${esc(s.notes)}</small>` : ''}</td>
+function tipHtml(d) {
+  const m = dt(d.key + '-01').toLocaleDateString('de-CH', { month: 'long', year: 'numeric' }), saldo = d.income - d.cost - d.invest;
+  const tl = (a, b) => `<div class="tl"><span>${a}</span><span>${b}</span></div>`;
+  const byCur = {};
+  d.items.filter((i) => i.kind !== 'income').forEach((i) => (byCur[i.cur] = (byCur[i.cur] || 0) + i.amount));
+  const items = [...d.items].sort((a, b) => b.value - a.value);
+  return `<b>${m}</b>`
+    + tl('Einnahmen', fmt(d.income)) + tl('Fixkosten', fmt(d.cost)) + tl('Investiert', fmt(d.invest))
+    + tl('<b>Saldo</b>', `<b class="${saldo >= 0 ? 'pos' : 'neg'}">${saldo >= 0 ? '+' : ''}${fmt(saldo)}</b>`) + '<hr>'
+    + (items.slice(0, 10).map((i) => tl(`${esc(i.name)} <small>${dt(i.date).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' })}</small>`,
+      `${i.kind === 'income' ? '+' : ''}${fmt(i.amount, i.cur)}${i.cur !== db.base ? ` <small>≈ ${fmt(i.value)}</small>` : ''}`)).join('') || '<small>Keine Zahlungen</small>')
+    + (items.length > 10 ? `<small>… und ${items.length - 10} weitere</small>` : '')
+    + (Object.keys(byCur).length ? `<hr><small>Du zahlst in: ${Object.entries(byCur).map(([c, v]) => fmt(v, c)).join(' · ')}</small>` : '');
+}
+
+function showTip(e) {
+  const g = e.target.closest?.('g[data-m]'), tip = $('#tip');
+  document.querySelectorAll('.chart g.on').forEach((x) => x !== g && x.classList.remove('on'));
+  if (!g) return (tip.hidden = true);
+  if (!g.classList.contains('on')) { g.classList.add('on'); tip.innerHTML = tipHtml(fcData[g.dataset.m]); }
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(e.clientX + 14, innerWidth - r.width - 8)) + 'px';
+  tip.style.top = (e.clientY + 14 + r.height > innerHeight ? Math.max(8, e.clientY - r.height - 14) : e.clientY + 14) + 'px';
+}
+
+function invLink(i) {
+  return `<a href="${guest ? '#' : esc(i.link)}" ${guest ? `data-open="${esc(i.fileId)}"` : 'target="_blank" rel="noopener"'}>📄 ${esc(i.name)}</a>`;
+}
+function preview(i) {
+  const src = guest ? blobUrls[i.fileId] : `https://drive.google.com/file/d/${encodeURIComponent(i.fileId)}/preview`;
+  if (!src) return '<p class="mut">Datei nicht mehr vorhanden.</p>';
+  return `<div class="prev">${guest && /\.(png|jpe?g|gif|webp)$/i.test(i.name) ? `<img src="${src}" alt="${esc(i.name)}">` : `<iframe src="${esc(src)}" title="${esc(i.name)}" loading="lazy" allow="autoplay"></iframe>`}</div>`;
+}
+const eye = (i) => `<button class="ico" data-prev="${i.id}" aria-pressed="${shown.has(i.id)}" title="${shown.has(i.id) ? 'Vorschau ausblenden' : 'Vorschau anzeigen'}" aria-label="Vorschau">${shown.has(i.id) ? '🙈' : '👁'}</button>`;
+
+function renderList(v) {
+  const q = $(`#q-${v}`).value.toLowerCase(), cat = $(`#cat-${v}`).value, kinds = v === 'in' ? ['income'] : ['cost', 'invest'], T = today();
+  $(`#cat-${v}`).innerHTML = `<option value="">Alle Kategorien</option>` + catOpts(kinds, cat);
+  const rows = sorted(v, db.subs
+    .filter((s) => kinds.includes(kind(s)) && (!cat || s.cat === cat) && `${s.name} ${s.notes} ${CATEGORIES[s.cat]}`.toLowerCase().includes(q))
+    .sort((a, b) => isLive(b, T) - isLive(a, T) || mon(b) - mon(a)));
+  $(`#rows-${v}`).innerHTML = rows.map((s) => {
+    const live = isLive(s, T), docs = db.invoices.filter((i) => i.subId === s.id).sort((a, b) => b.date.localeCompare(a.date));
+    return `<tr class="${live ? '' : 'off'}">
+    <td><b>${esc(s.name)}</b>${s.notes ? `<br><small class="mut">${esc(s.notes)}</small>` : ''}${s.end ? `<br><small class="mut">endet ${day(s.end)}</small>` : ''}</td>
     <td><span class="pill">${esc(CATEGORIES[s.cat])}</span></td>
     <td class="r">${fmt(s.amount, s.cur)}<br><small class="mut">${INTERVALS[s.interval][0]}</small></td>
     <td class="r">${fmt(mon(s))}</td>
-    <td>${s.active ? day(due(s)) : '<span class="mut">pausiert</span>'}</td>
-    <td class="r"><button class="ico" data-show="${s.id}" title="Rechnungen anzeigen">🧾 ${count(s.id)}</button></td>
+    <td>${live ? day(due(s)) : `<span class="mut">${s.active ? 'beendet' : 'pausiert'}</span>`}</td>
+    <td class="r"><button class="ico" data-exp="${s.id}" aria-expanded="${expanded.has(s.id)}" title="Rechnungen ein-/ausblenden">🧾 ${docs.length} ${expanded.has(s.id) ? '▴' : '▾'}</button></td>
     <td class="r"><button class="ico" data-upl="${s.id}" title="Rechnung hochladen" aria-label="Rechnung hochladen">⬆️</button><button class="ico" data-edit="${s.id}" title="Bearbeiten" aria-label="Bearbeiten">✏️</button><button class="ico" data-del="${s.id}" title="Löschen" aria-label="Löschen">🗑️</button></td>
-  </tr>`).join('') || `<tr><td colspan="7" class="empty">${db.subs.length ? 'Keine Treffer.' : 'Noch keine Abos – leg mit „+ Abo“ los.'}</td></tr>`;
+  </tr>${expanded.has(s.id) ? `<tr class="sub"><td colspan="7">${docs.map((i) => `<div class="invline"><span class="mut">${day(i.date)}</span><span>${invLink(i)}</span><span class="r">${i.amount ? fmt(i.amount, i.cur) : ''}</span>${eye(i)}</div>${shown.has(i.id) ? preview(i) : ''}`).join('') || '<span class="mut">Noch keine Rechnungen.</span>'}
+      <div><button class="ico" data-upl="${s.id}">⬆️ Rechnung hochladen</button></div></td></tr>` : ''}`;
+  }).join('') || `<tr><td colspan="7" class="empty">${db.subs.some((s) => kinds.includes(kind(s))) ? 'Keine Treffer.' : v === 'in' ? 'Noch keine Einnahmen – z.B. deinen Lohn mit „+ Einnahme“ erfassen.' : 'Noch keine Ausgaben – leg mit „+ Ausgabe“ los.'}</td></tr>`;
 }
 
 function renderInv() {
   const sub = $('#invSub').value, year = $('#invYear').value;
-  $('#invSub').innerHTML = `<option value="">Alle Abos</option>` + db.subs.map((s) => `<option value="${s.id}"${s.id === sub ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
+  $('#invSub').innerHTML = `<option value="">Alle Posten</option>` + db.subs.map((s) => `<option value="${s.id}"${s.id === sub ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
   const years = [...new Set(db.invoices.map((i) => i.date.slice(0, 4)))].sort().reverse();
   $('#invYear').innerHTML = `<option value="">Alle Jahre</option>` + years.map((y) => `<option${y === year ? ' selected' : ''}>${y}</option>`).join('');
-  const list = searchInvoices(db.invoices, db.subs, $('#invQ').value, hits)
+  const list = sorted('inv', searchInvoices(db.invoices, db.subs, $('#invQ').value, hits)
     .filter((i) => (!sub || i.subId === sub) && (!year || i.date.startsWith(year)))
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a, b) => b.date.localeCompare(a.date)));
   const total = list.reduce((a, i) => a + toBase(i.amount || 0, i.cur, db.base, rates), 0);
   $('#invSum').textContent = `${list.length} von ${db.invoices.length} Rechnungen · Summe ${fmt(total)}`;
   $('#invRows').innerHTML = list.map((i) => {
     const s = subById(i.subId);
     return `<tr>
       <td>${day(i.date)}</td>
-      <td><a href="${guest ? '#' : esc(i.link)}" ${guest ? `data-open="${esc(i.fileId)}"` : 'target="_blank" rel="noopener"'}>📄 ${esc(i.name)}</a></td>
+      <td>${invLink(i)}</td>
       <td>${esc(s?.name ?? '–')}<br><small class="mut">${esc(CATEGORIES[s?.cat] ?? '')}</small></td>
       <td class="r">${i.amount ? fmt(i.amount, i.cur) : '–'}</td>
       <td class="mut">${esc(i.notes)}</td>
-      <td class="r"><button class="ico" data-delinv="${i.id}" title="Löschen" aria-label="Rechnung löschen">🗑️</button></td>
-    </tr>`;
+      <td class="r">${eye(i)}<button class="ico" data-delinv="${i.id}" title="Löschen" aria-label="Rechnung löschen">🗑️</button></td>
+    </tr>${shown.has(i.id) ? `<tr class="sub"><td colspan="6">${preview(i)}</td></tr>` : ''}`;
   }).join('') || `<tr><td colspan="6" class="empty">${db.invoices.length ? 'Keine Treffer.' : 'Noch keine Rechnungen hochgeladen.'}</td></tr>`;
 }
 
@@ -446,24 +579,28 @@ function tab(name) {
   document.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== name));
 }
 
-function editSub(s = { cat: 'media', interval: 'month', cur: db.base, next: today(), active: true }) {
+function editSub(s, v = kind(s) === 'income' ? 'in' : 'out') {
+  const isNew = !s;
+  s ??= { cat: v === 'in' ? 'salary' : 'media', interval: 'month', cur: db.base, next: today(), active: true };
   const dlg = $('#subDlg'), f = dlg.querySelector('form');
-  $('#subTitle').textContent = s.id ? 'Bearbeiten' : 'Neues Abo / Sparplan';
-  f.cat.innerHTML = opts(CATEGORIES, s.cat);
+  $('#subTitle').textContent = !isNew ? 'Bearbeiten' : v === 'in' ? 'Neue Einnahme' : 'Neue Ausgabe / Sparplan';
+  f.name.placeholder = v === 'in' ? 'z.B. Lohn, Dividende Nestlé' : 'z.B. Miete, Netflix, ETF-Sparplan VWRL';
+  f.cat.innerHTML = catOpts(v === 'in' ? ['income'] : ['cost', 'invest'], s.cat);
   f.interval.innerHTML = opts(INTERVALS, s.interval);
   f.cur.innerHTML = curOpts(s.cur);
-  f.name.value = s.name ?? ''; f.amount.value = s.amount ?? ''; f.next.value = s.next; f.notes.value = s.notes ?? ''; f.active.value = s.active ? '1' : '';
+  f.name.value = s.name ?? ''; f.amount.value = s.amount ?? ''; f.next.value = s.next; f.end.value = s.end ?? ''; f.notes.value = s.notes ?? ''; f.active.value = s.active ? '1' : '';
   dlg.onclose = () => {
     if (dlg.returnValue !== 'ok') return;
-    const v = { name: f.name.value.trim(), cat: f.cat.value, interval: f.interval.value, amount: +f.amount.value, cur: f.cur.value, next: f.next.value, notes: f.notes.value.trim(), active: !!f.active.value };
-    if (s.id) Object.assign(s, v); else db.subs.push({ id: uid(), ...v });
+    if (f.end.value && f.end.value < f.next.value) return toast('Enddatum liegt vor dem nächsten Datum – nicht gespeichert');
+    const val = { name: f.name.value.trim(), cat: f.cat.value, interval: f.interval.value, amount: +f.amount.value, cur: f.cur.value, next: f.next.value, end: f.end.value || undefined, notes: f.notes.value.trim(), active: !!f.active.value };
+    if (isNew) db.subs.push({ id: uid(), ...val }); else Object.assign(s, val);
     save();
   };
   dlg.returnValue = ''; dlg.showModal();
 }
 
 function uploadInv(subId = db.subs[0]?.id) {
-  if (!db.subs.length) return toast('Lege zuerst ein Abo an.');
+  if (!db.subs.length) return toast('Lege zuerst einen Posten an.');
   const dlg = $('#invDlg'), f = dlg.querySelector('form');
   f.reset();
   f.subId.innerHTML = db.subs.map((s) => `<option value="${s.id}"${s.id === subId ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
@@ -480,6 +617,7 @@ function uploadInv(subId = db.subs[0]?.id) {
         if (guest) await idb('readwrite', (st) => st.put(file, up.id));
         db.invoices.push({ id: uid(), subId: s.id, fileId: up.id, link: up.webViewLink, name: file.name, date: f.date.value, amount: +f.amount.value || 0, cur: s.cur, notes: f.notes.value.trim() });
       }
+      expanded.add(s.id);
     } catch (e) { toast('Upload fehlgeschlagen: ' + e.message); }
     save();
   };
@@ -493,8 +631,19 @@ async function delInv(inv) {
   db.invoices = db.invoices.filter((i) => i !== inv);
 }
 
+const download = (name, type, text) => {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([text], { type })), download: name });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+
 document.addEventListener('click', async (e) => {
   if (!e.target.closest('#menu')) $('#menu').open = false;
+  const th = e.target.closest('th[data-sort]');
+  if (th) {
+    const tbl = th.closest('table').dataset.tbl, k = th.dataset.sort;
+    sort[tbl] = sort[tbl]?.k === k ? { k, dir: -sort[tbl].dir } : { k, dir: 1 };
+    return render();
+  }
   const b = e.target.closest('button,[data-open]'); if (!b) return;
   const d = b.dataset;
   try {
@@ -503,11 +652,24 @@ document.addEventListener('click', async (e) => {
       const blob = await idb('readonly', (st) => st.get(d.open));
       blob ? window.open(URL.createObjectURL(blob), '_blank') : toast('Datei nicht mehr im Browser vorhanden');
     } else if (d.google) { $('#menu').open = false; await guestToGoogle(); }
-    else if (d.tab) tab(d.tab);
+    else if (d.themeSet) {
+      document.documentElement.dataset.theme = d.themeSet;
+      try { localStorage.setItem('theme', d.themeSet); } catch {}
+      render();
+    } else if (d.tab) tab(d.tab);
+    else if (d.add) editSub(null, d.add);
     else if (d.edit) editSub(subById(d.edit));
     else if (d.upl) uploadInv(d.upl);
-    else if (d.show) { $('#invSub').innerHTML = `<option value="${d.show}"></option>`; $('#invQ').value = ''; hits.clear(); tab('inv'); renderInv(); }
-    else if (d.del) {
+    else if (d.exp) { expanded.has(d.exp) ? expanded.delete(d.exp) : expanded.add(d.exp); render(); }
+    else if (d.prev) {
+      const inv = db.invoices.find((i) => i.id === d.prev);
+      if (shown.has(inv.id)) shown.delete(inv.id);
+      else {
+        if (guest && !blobUrls[inv.fileId]) { const blob = await idb('readonly', (st) => st.get(inv.fileId)); if (blob) blobUrls[inv.fileId] = URL.createObjectURL(blob); }
+        shown.add(inv.id);
+      }
+      render();
+    } else if (d.del) {
       const s = subById(d.del), inv = db.invoices.filter((i) => i.subId === s.id);
       if (!confirm(`„${s.name}“ löschen?${inv.length ? `\nAuch ${inv.length} Rechnung(en) werden gelöscht.` : ''}`)) return;
       for (const i of inv) await delInv(i);
@@ -518,21 +680,21 @@ document.addEventListener('click', async (e) => {
     }
   } catch (err) { toast('Fehler: ' + err.message); }
 });
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('th[data-sort]')) e.target.click(); });
+
+$('#forecast').addEventListener('pointermove', showTip);
+$('#forecast').addEventListener('pointerdown', showTip);
+$('#forecast').addEventListener('pointerleave', () => { $('#tip').hidden = true; document.querySelectorAll('.chart g.on').forEach((x) => x.classList.remove('on')); });
+addEventListener('scroll', () => ($('#tip').hidden = true), { passive: true });
 
 $('#loginBtn').onclick = () => start();
 $('#guestBtn').onclick = () => start(true);
 $('#wipe').onclick = () => wipe().catch((e) => toast('Fehler: ' + e.message));
-$('#addSub').onclick = () => editSub();
 $('#addInv').onclick = () => uploadInv();
-$('#subQ').oninput = $('#subCat').onchange = renderSubs;
+for (const v of ['out', 'in']) $(`#q-${v}`).oninput = $(`#cat-${v}`).onchange = () => renderList(v);
+$('#dq').oninput = $('#dcat').onchange = renderDash;
 $('#invSub').onchange = $('#invYear').onchange = renderInv;
 $('#base').onchange = async (e) => { db.base = e.target.value; await loadRates(); save(); };
-$('#theme').value = document.documentElement.dataset.theme || '';
-$('#theme').onchange = (e) => {
-  const t = e.target.value;
-  t ? (document.documentElement.dataset.theme = t) : delete document.documentElement.dataset.theme;
-  try { t ? localStorage.setItem('theme', t) : localStorage.removeItem('theme'); } catch {}
-};
 
 // Interactive search: local metadata instantly, PDF/image text via Drive full-text index (debounced)
 let deb;
@@ -550,11 +712,26 @@ $('#invQ').oninput = (e) => {
 };
 
 $('#csv').onclick = () => {
-  const head = ['Name', 'Kategorie', 'Betrag', 'Währung', 'Intervall', `Monatlich (${db.base})`, 'Nächste Zahlung', 'Aktiv', 'Notiz'];
-  const rows = db.subs.map((s) => [s.name, CATEGORIES[s.cat], s.amount, s.cur, INTERVALS[s.interval][0], mon(s).toFixed(2), due(s), s.active ? 'ja' : 'nein', s.notes]);
-  const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })), download: `spendly-${today()}.csv` });
-  a.click(); URL.revokeObjectURL(a.href);
+  const ART = { cost: 'Ausgabe', invest: 'Sparen & Investieren', income: 'Einnahme' };
+  const head = ['Name', 'Art', 'Kategorie', 'Betrag', 'Währung', 'Intervall', `Monatlich (${db.base})`, 'Nächstes Datum', 'Endet am', 'Aktiv', 'Notiz'];
+  const rows = db.subs.map((s) => [s.name, ART[kind(s)], CATEGORIES[s.cat], s.amount, s.cur, INTERVALS[s.interval][0], mon(s).toFixed(2), due(s), s.end, s.active ? 'ja' : 'nein', s.notes]);
+  download(`spendly-${today()}.csv`, 'text/csv', '﻿' + [head, ...rows].map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n'));
+};
+$('#backup').onclick = () => download(`spendly-backup-${today()}.json`, 'application/json', JSON.stringify(db, null, 2));
+$('#restore').onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = '';
+  try {
+    const d = JSON.parse(await file.text());
+    // trust boundary: ids end up in HTML attributes, links in href, currencies in Intl → validate strictly
+    const ID = /^[\w-]{1,64}$/, DATE = /^\d{4}-\d{2}-\d{2}$/, CUR = /^[A-Z]{3}$/;
+    const okSub = (s) => s && ID.test(s.id) && typeof s.name === 'string' && CATEGORIES[s.cat] && INTERVALS[s.interval] && CUR.test(s.cur) && DATE.test(s.next) && Number.isFinite(+s.amount) && (!s.end || DATE.test(s.end));
+    const okInv = (i) => i && ID.test(i.id) && ID.test(i.subId) && typeof i.fileId === 'string' && typeof i.name === 'string' && DATE.test(i.date) && CUR.test(i.cur) && (!i.link || /^https:\/\//.test(i.link));
+    if (!Array.isArray(d.subs) || !d.subs.every(okSub) || !(d.invoices ?? []).every(okInv) || (d.base && !CUR.test(d.base))) throw new Error('keine gültige Spendly-Sicherung');
+    if (!confirm(`Backup mit ${d.subs.length} Posten wiederherstellen? Die aktuellen Daten werden ersetzt.`)) return;
+    db = { base: typeof d.base === 'string' ? d.base : db.base, subs: d.subs, invoices: Array.isArray(d.invoices) ? d.invoices : [] };
+    $('#menu').open = false;
+    await loadRates(); save();
+  } catch (err) { toast('Backup fehlgeschlagen: ' + err.message); }
 };
 
 if (!CLIENT_ID) { $('#setup').hidden = false; $('#loginBtn').disabled = true; }
